@@ -1,0 +1,13 @@
+menu "Home Assistant Configuration"
+
+    config HA_ADDRESS
+        string "Home Assistant Address"
+        help
+            Address of your Home Assistant Installation
+
+    config HA_KEY
+        string "Home Assistant API Key"
+        help
+            Your Home Assistant API Key
+
+endmenu

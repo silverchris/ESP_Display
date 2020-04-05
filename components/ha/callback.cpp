@@ -24,6 +24,16 @@ void callback_state_events(const JsonDocument &json) {
     }
 }
 
+void callback_state(const JsonDocument &json) {
+    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+        const char *entity = v["entity_id"];
+        update_entity(entity, v);
+    }
+    doc_out["type"] = "subscribe_events";
+    doc_out["event_type"] = "state_changed";
+    ws_queue_add(doc_out);
+}
+
 void callback_entities(const JsonDocument &json) {
     for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
         std::string id = v["device_id"];
@@ -31,6 +41,8 @@ void callback_entities(const JsonDocument &json) {
         add_entity((char *) id.c_str(), (char *) entity_id.c_str());
     }
     esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, nullptr, 0, 100);
+    doc_out["type"] = "get_states";
+    ws_queue_add(doc_out, callback_state);
 }
 
 void callback_devices(const JsonDocument &json) {
@@ -58,10 +70,7 @@ void callback_area(const JsonDocument &json) {
 }
 
 
-void callback_auth(const JsonDocument &json) {
-    doc_out["type"] = "subscribe_events";
-    doc_out["event_type"] = "state_changed";
-    ws_queue_add(doc_out);
+void callback_auth() {
     doc_out["type"] = "config/area_registry/list";
     ws_queue_add(doc_out, callback_area);
 }

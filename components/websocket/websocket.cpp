@@ -3,10 +3,13 @@
 #include <deque>
 #include <unordered_map>
 #include <csignal>
+#include <sstream>
+#include <iostream>
 
 #include "freertos/FreeRTOS.h"
 #include "esp_system.h"
 #include "freertos/task.h"
+#include "esp_timer.h"
 
 #include "esp_log.h"
 #include "esp_websocket_client.h"
@@ -15,6 +18,7 @@
 static const char *TAG = "WEBSOCKET";
 
 #include <ArduinoJson.h>
+#include <set>
 
 #include "secrets.h"
 
@@ -22,7 +26,10 @@ static const char *TAG = "WEBSOCKET";
 
 #include "callbacks.hpp"
 
-bool ha_ready = false;
+#define STREAM_TIMEOUT 1000000  // default number of micro-seconds to wait
+#define WS_BUFFER_SIZE 4000
+
+TaskHandle_t json_task_handle;
 
 std::unordered_map<uint16_t, void (*)(const JsonDocument &json)> CallbackMap;
 
@@ -53,9 +60,100 @@ void ws_queue_add(JsonDocument &doc) {
     doc.clear();
 }
 
-void handle_messages(char *json, int len) {
-    DynamicJsonDocument doc_in(6000);
-    DynamicJsonDocument filter(500);
+
+class CustomReader {
+private:
+    std::deque<int> buf;
+    SemaphoreHandle_t lock = xSemaphoreCreateMutex();
+
+public:
+    int read();
+
+    int peek();
+
+    void pop();
+
+    void fill(char *buffer, size_t length);
+
+    void putc(int character);
+
+    bool empty();
+};
+
+int CustomReader::read() {
+    int c = -1;
+    int64_t _startMillis = esp_timer_get_time();
+    do {
+        if (!buf.empty()) {
+            if (xSemaphoreTake(lock, (TickType_t) 10) == pdTRUE) {
+                c = buf.front();
+                if (c != -2) {
+                    buf.pop_front();
+                }
+//                printf("get: %c %i\n", c, c);
+            }
+            xSemaphoreGive(lock);
+        }
+        if (c == -2)
+            return c;
+        if (c >= 0)
+            return c;
+        if (STREAM_TIMEOUT == 0)
+            return -1;
+        vTaskDelay(25);
+//        taskYIELD();
+
+    } while (esp_timer_get_time() - _startMillis < STREAM_TIMEOUT);
+    return -1;     // -1 indicates timeout
+}
+
+int CustomReader::peek() {
+    int c = -1;
+    if (!buf.empty()) {
+        if (xSemaphoreTake(lock, (TickType_t) 10) == pdTRUE) {
+            c = buf.front();
+        }
+        xSemaphoreGive(lock);
+    }
+    return c;
+}
+
+void CustomReader::pop() {
+    if (!buf.empty()) {
+        if (xSemaphoreTake(lock, (TickType_t) 10) == pdTRUE) {
+            buf.pop_front();
+        }
+        xSemaphoreGive(lock);
+    }
+}
+
+
+void CustomReader::fill(char *buffer, size_t length) {
+    if (xSemaphoreTake(lock, (TickType_t) 10) == pdTRUE) {
+        for (int i = 0; i < length; i++) {
+            buf.push_back(buffer[i]);
+        }
+    }
+    xSemaphoreGive(lock);
+
+
+}
+
+void CustomReader::putc(int character) {
+    buf.push_back(character);
+}
+
+
+bool CustomReader::empty() {
+    return buf.empty();
+}
+
+
+void json_task(void *pvParameters) {
+    auto jsonstream = (CustomReader *) pvParameters;
+//    char *out = (char *)malloc(10000);
+    DynamicJsonDocument doc_in(12000);
+    DynamicJsonDocument filter(1000);
     filter["type"] = true;
     filter["id"] = true;
     filter["success"] = true;
@@ -64,45 +162,60 @@ void handle_messages(char *json, int len) {
     filter["result"][0]["name"] = true;
     filter["result"][0]["device_id"] = true;
     filter["result"][0]["entity_id"] = true;
+    filter["result"][0]["state"] = true;
+    filter["result"][0]["attributes"]["brightness"] = true;
     filter["event"]["event_type"] = true;
     filter["event"]["data"]["entity_id"] = true;
     filter["event"]["data"]["new_state"]["state"] = true;
     filter["event"]["data"]["new_state"]["attributes"]["brightness"] = true;
 
-    DeserializationError error = deserializeJson(doc_in, (const char *) json, len,
-                                                 DeserializationOption::Filter(filter));
+    DeserializationError error;
 
-    // Test if parsing succeeds.
-    if (error) {
-        printf("%s\n", "deserializeJson() failed");
-        return;
-    }
-
-    const char *type = doc_in["type"];
-
-    if (strcmp(type, "auth_ok") == 0) {
-        callback_auth(doc_in);
-    } else if (strcmp(type, "auth_required") == 0) {
-        StaticJsonDocument<300> doc_out;
-        doc_out["type"] = "auth";
-        doc_out["access_token"] = HA_TOKEN;
-    } else if (strcmp(type, "event") == 0) {
-        callback_state_events(doc_in);
-        printf("done event callback\n");
-    } else {
-        uint16_t id = doc_in["id"];
-        if (CallbackMap.count(id) > 0) {
-            CallbackMap[id](doc_in);
-            CallbackMap.erase(id);
-            printf("done callback\n");
+    while (1) {
+        if (!jsonstream->empty()) {
+            error = deserializeJson(doc_in, *jsonstream, DeserializationOption::Filter(filter));
+        }
+        if (jsonstream->peek() == -2) {
+            jsonstream->pop(); //throw away our end of message character
+            if (error) {
+                printf("deserializeJson() failed: %s\n", error.c_str());
+                doc_in.clear();
+            } else {
+//                serializeJsonPretty(doc_in, out, 10000);
+//                printf("json out: %s\n", out);
+                const char *type = doc_in["type"];
+//                printf("type: %s\n", type);
+                if (strcmp(type, "auth_ok") == 0) {
+                    callback_auth();
+                } else if (strcmp(type, "auth_required") == 0) {
+                } else if (strcmp(type, "event") == 0) {
+                    callback_state_events(doc_in);
+                    printf("done event callback\n");
+                } else if (strcmp(type, "result") == 0) {
+                    uint16_t id = doc_in["id"];
+                    if (CallbackMap.count(id) > 0) {
+                        CallbackMap[id](doc_in);
+                        CallbackMap.erase(id);
+                        printf("done callback\n");
+                    }
+                }
+                doc_in.clear();
+            }
+        }
+        if (jsonstream->empty()) {
+            vTaskSuspend(json_task_handle);
+        } else {
+            taskYIELD();
         }
     }
+//    free(out);
 }
 
-char buffer[10000];
 
 static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     auto *data = (esp_websocket_event_data_t *) event_data;
+    auto *jsonstream = (CustomReader *) handler_args;
+
     switch (event_id) {
         case WEBSOCKET_EVENT_CONNECTED:
             ESP_LOGI(TAG, "WEBSOCKET_EVENT_CONNECTED");
@@ -113,16 +226,17 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
         case WEBSOCKET_EVENT_DATA:
             ESP_LOGI(TAG, "WEBSOCKET_EVENT_DATA");
             ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
+            ESP_LOGI(TAG, "Data Len=%d", data->data_len);
+            ESP_LOGI(TAG, "Payload Len=%d", data->payload_len);
+            ESP_LOGI(TAG, "Payload Offset=%d", data->payload_offset);
+            ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
             if (data->op_code == 1) {
-                ESP_LOGI(TAG, "Data Len=%d", data->data_len);
-                ESP_LOGI(TAG, "Payload Len=%d", data->payload_len);
-                ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
-                strncat(buffer, (char *) data->data_ptr, data->data_len < 10000 ? data->data_len : 10000);
-                ESP_LOGI(TAG, "string Len=%d", strlen(buffer));
-                if (data->data_len == data->payload_len || strlen(buffer) == data->payload_len) {
-                    handle_messages(buffer, data->payload_len);
-                    buffer[0] = '\0';
+                jsonstream->fill((char *) data->data_ptr, data->data_len);
+                if (data->payload_offset + data->data_len >= data->payload_len) {
+                    ESP_LOGI(TAG, "data->payload_offset + data->data_len=%i", data->payload_offset + data->data_len);
+                    jsonstream->putc(-2);
                 }
+                vTaskResume(json_task_handle);
             }
             break;
         case WEBSOCKET_EVENT_ERROR:
@@ -134,23 +248,29 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
 void websocket_init(void) {
     esp_websocket_client_config_t websocket_cfg = {};
 
-    websocket_cfg.uri = "ws://" HA_ADDRESS "/api/websocket";
+    websocket_cfg.uri = "ws://" CONFIG_HA_ADDRESS "/api/websocket";
     websocket_cfg.port = 8123;
-    websocket_cfg.buffer_size = 500;
+    websocket_cfg.buffer_size = WS_BUFFER_SIZE;
     websocket_cfg.task_stack = 10000;
 
 
     ESP_LOGI(TAG, "Connecting to %s...", websocket_cfg.uri);
 
     client = esp_websocket_client_init(&websocket_cfg);
-    esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *) client);
+
+    auto jsonstream = new CustomReader;
+
+    esp_websocket_register_events(client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *) jsonstream);
+
+    xTaskCreate(json_task, "json_task", 10000, (void *) jsonstream, 0, &json_task_handle);
 
     esp_websocket_client_start(client);
+
     while (true) {
         if (esp_websocket_client_is_connected(client)) {
             StaticJsonDocument<300> doc_out;
             doc_out["type"] = "auth";
-            doc_out["access_token"] = HA_TOKEN;
+            doc_out["access_token"] = CONFIG_HA_KEY;
             message_id++;
             std::string message;
             serializeJson(doc_out, message);
