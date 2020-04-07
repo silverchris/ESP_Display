@@ -1,28 +1,15 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
 
 #include "freertos/task.h"
 #include "esp_freertos_hooks.h"
-#include "freertos/semphr.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-
-#include "lwip/err.h"
-#include "lwip/sys.h"
-
-
-#include "esp_system.h"
-#include "driver/gpio.h"
-
-/* Littlevgl specific */
-#include "lvgl/lvgl.h"
-#include "lvgl_driver.h"
 
 #include "gui.h"
 #include "websocket.h"
@@ -124,91 +111,9 @@ void wifi_init_sta()
 }
 
 
-static void IRAM_ATTR lv_tick_task(void *arg);
-void guiTask();
 
-static void IRAM_ATTR lv_tick_task(void *arg) {
-    (void) arg;
-
-    lv_tick_inc(portTICK_RATE_MS);
-}
-
-//Creates a semaphore to handle concurrent call to lvgl stuff
-//If you wish to call *any* lvgl function from other threads/tasks
-//you should lock on the very same semaphore!
-SemaphoreHandle_t xGuiSemaphore;
-
-void event_ha_ready(void* handler_arg, esp_event_base_t base, int32_t id, void* event_data)
-{
-    if (xSemaphoreTake(xGuiSemaphore, (TickType_t)10) == pdTRUE) {
-        gui_init();
-        xSemaphoreGive(xGuiSemaphore);
-    }
-}
-
-void guiTask() {
-    xGuiSemaphore = xSemaphoreCreateMutex();
-
-    lv_init();
-
-    lvgl_driver_init();
-
-    static lv_color_t buf1[320*10];
-    static lv_color_t buf2[320*10];
-    static lv_disp_buf_t disp_buf;
-    lv_disp_buf_init(&disp_buf, buf1, buf2, 320*10);
-
-    lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.flush_cb = disp_driver_flush;
-    disp_drv.buffer = &disp_buf;
-    lv_disp_drv_register(&disp_drv);
-
-#if CONFIG_LVGL_TOUCH_CONTROLLER != TOUCH_CONTROLLER_NONE
-    lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.read_cb = touch_driver_read;
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    lv_indev_drv_register(&indev_drv);
-#endif
-
-    LV_FONT_DECLARE(Symbols);
-    lv_theme_t *th = lv_theme_material_init(270, NULL);
-    lv_theme_set_current(th);
-    style_setup();
-
-    /*Create a Preloader object*/
-    lv_obj_t *preload = lv_preload_create(lv_scr_act(), NULL);
-    lv_obj_set_size(preload, 100, 100);
-    lv_obj_align(preload, NULL, LV_ALIGN_CENTER, 0, 0);
-    lv_preload_set_style(preload, LV_PRELOAD_STYLE_MAIN, &style_preload);
-
-
-    const esp_timer_create_args_t periodic_timer_args = {
-            .callback = &lv_tick_task,
-            /* name is optional, but may help identify the timer when debugging */
-            .name = "periodic_gui"
-    };
-    esp_timer_handle_t periodic_timer;
-    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
-    //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
-    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 10*1000)); //10ms (expressed as microseconds)
-
-    while (1) {
-        vTaskDelay(1);
-        //Try to lock the semaphore, if success, call lvgl stuff
-        if (xSemaphoreTake(xGuiSemaphore, (TickType_t)10) == pdTRUE) {
-            lv_task_handler();
-            xSemaphoreGive(xGuiSemaphore);
-        }
-    }
-
-    //A task should NEVER return
-    vTaskDelete(NULL);
-}
 
 void app_main() {
-    xTaskCreatePinnedToCore((TaskFunction_t) guiTask, "gui", 4096 * 2, NULL, 0, NULL, 1);
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -221,6 +126,7 @@ void app_main() {
     wifi_init_sta();
 
     ha_event_init();
+    gui_init();
     websocket_init();
-    esp_event_handler_register_with(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, event_ha_ready, NULL);
+
 }

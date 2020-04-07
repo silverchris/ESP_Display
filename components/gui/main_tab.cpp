@@ -1,5 +1,6 @@
 #include "lvgl/lvgl.h"
 #include "gui.h"
+#include "widgets.h"
 
 #define TANKS 4
 const char *tank_names[TANKS] = {"#0000FF \xEF\x81\x83#", "\xEF\x8B\x8D", "\xEF\x9F\x98", "\xEF\x91\xAA"};
@@ -39,20 +40,29 @@ void update_tanks(int16_t water, int16_t grey, int16_t black, int16_t lpg) {
     lv_bar_set_value(tank_ptrs[3], lpg, LV_ANIM_ON);
 }
 
+
+
 void create_temperature(lv_obj_t *parent) {
     lv_obj_t *cont = lv_cont_create(parent, nullptr);
     lv_cont_set_layout(cont, LV_LAYOUT_PRETTY);
     lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
     lv_cont_set_fit2(cont, LV_FIT_FLOOD, LV_FIT_TIGHT);
 
-    lv_obj_t *cont_outside = lv_cont_create(cont, nullptr);
-    lv_cont_set_style(cont_outside, LV_CONT_STYLE_MAIN, &lv_style_transp);
-    lv_cont_set_layout(cont_outside, LV_LAYOUT_COL_M);
-    lv_obj_t *outside_label = lv_label_create(cont_outside, nullptr);
-    lv_label_set_text(outside_label, "Outside");
-    lv_obj_t *outside_temp = lv_label_create(cont_outside, nullptr);
-    lv_label_set_text(outside_temp, "20.1");
-    lv_label_set_style(outside_temp, LV_LABEL_STYLE_MAIN, &style_temperature);
+    for (const std::pair<const std::string, ha_entity *> &entity : ha_entities) {
+        if (entity.second->type == ha_entity_type::ha_weather) {
+            printf("weather: %s\n", entity.second->id);
+            new lvgl_temperature(cont, (ha_entity_weather *) entity.second);
+        }
+    }
+
+//    lv_obj_t *cont_outside = lv_cont_create(cont, nullptr);
+//    lv_cont_set_style(cont_outside, LV_CONT_STYLE_MAIN, &lv_style_transp);
+//    lv_cont_set_layout(cont_outside, LV_LAYOUT_COL_M);
+//    lv_obj_t *outside_label = lv_label_create(cont_outside, nullptr);
+//    lv_label_set_text(outside_label, "Outside");
+//    lv_obj_t *outside_temp = lv_label_create(cont_outside, nullptr);
+//    lv_label_set_text(outside_temp, "20.1");
+//    lv_label_set_style(outside_temp, LV_LABEL_STYLE_MAIN, &style_temperature);
 
     lv_obj_t *cont_inside = lv_cont_create(cont, nullptr);
     lv_cont_set_style(cont_inside, LV_CONT_STYLE_MAIN, &lv_style_transp);

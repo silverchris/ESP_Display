@@ -3,11 +3,8 @@
 #include <deque>
 #include <unordered_map>
 #include <csignal>
-#include <sstream>
-#include <iostream>
 
 #include "freertos/FreeRTOS.h"
-#include "esp_system.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
 
@@ -18,9 +15,6 @@
 static const char *TAG = "WEBSOCKET";
 
 #include <ArduinoJson.h>
-#include <set>
-
-#include "secrets.h"
 
 #include "websocket.h"
 
@@ -60,25 +54,6 @@ void ws_queue_add(JsonDocument &doc) {
     doc.clear();
 }
 
-
-class CustomReader {
-private:
-    std::deque<int> buf;
-    SemaphoreHandle_t lock = xSemaphoreCreateMutex();
-
-public:
-    int read();
-
-    int peek();
-
-    void pop();
-
-    void fill(char *buffer, size_t length);
-
-    void putc(int character);
-
-    bool empty();
-};
 
 int CustomReader::read() {
     int c = -1;
@@ -152,7 +127,7 @@ bool CustomReader::empty() {
 void json_task(void *pvParameters) {
     auto jsonstream = (CustomReader *) pvParameters;
 //    char *out = (char *)malloc(10000);
-    DynamicJsonDocument doc_in(12000);
+    DynamicJsonDocument doc_in(20000);
     DynamicJsonDocument filter(1000);
     filter["type"] = true;
     filter["id"] = true;
@@ -163,15 +138,17 @@ void json_task(void *pvParameters) {
     filter["result"][0]["device_id"] = true;
     filter["result"][0]["entity_id"] = true;
     filter["result"][0]["state"] = true;
-    filter["result"][0]["attributes"]["brightness"] = true;
+    filter["result"][0]["attributes"] = true;
     filter["event"]["event_type"] = true;
     filter["event"]["data"]["entity_id"] = true;
     filter["event"]["data"]["new_state"]["state"] = true;
-    filter["event"]["data"]["new_state"]["attributes"]["brightness"] = true;
+    filter["event"]["data"]["new_state"]["attributes"] = true;
 
     DeserializationError error;
 
-    while (1) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+    while (true) {
         if (!jsonstream->empty()) {
             error = deserializeJson(doc_in, *jsonstream, DeserializationOption::Filter(filter));
         }
@@ -208,6 +185,7 @@ void json_task(void *pvParameters) {
             taskYIELD();
         }
     }
+#pragma clang diagnostic pop
 //    free(out);
 }
 
@@ -225,15 +203,15 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             break;
         case WEBSOCKET_EVENT_DATA:
             ESP_LOGI(TAG, "WEBSOCKET_EVENT_DATA");
-            ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
-            ESP_LOGI(TAG, "Data Len=%d", data->data_len);
-            ESP_LOGI(TAG, "Payload Len=%d", data->payload_len);
-            ESP_LOGI(TAG, "Payload Offset=%d", data->payload_offset);
-            ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
+//            ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
+//            ESP_LOGI(TAG, "Data Len=%d", data->data_len);
+//            ESP_LOGI(TAG, "Payload Len=%d", data->payload_len);
+//            ESP_LOGI(TAG, "Payload Offset=%d", data->payload_offset);
+//            ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
             if (data->op_code == 1) {
-                jsonstream->fill((char *) data->data_ptr, data->data_len);
+                jsonstream->fill((char *) data->data_ptr, (size_t) data->data_len);
                 if (data->payload_offset + data->data_len >= data->payload_len) {
-                    ESP_LOGI(TAG, "data->payload_offset + data->data_len=%i", data->payload_offset + data->data_len);
+//                    ESP_LOGI(TAG, "data->payload_offset + data->data_len=%i", data->payload_offset + data->data_len);
                     jsonstream->putc(-2);
                 }
                 vTaskResume(json_task_handle);

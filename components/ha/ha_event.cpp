@@ -1,7 +1,7 @@
-#include "freertos/FreeRTOS.h"
+#include <freertos/FreeRTOS.h>
 #include <esp_event_base.h>
 #include <esp_event.h>
-#include "esp_log.h"
+#include <esp_log.h>
 
 #include "ha_event.h"
 
@@ -28,4 +28,8 @@ void ha_event_init(void) {
 
 void ha_event_deinit() {
     esp_event_loop_delete(ha_event_loop_hdl);
+}
+
+void ha_event_post(int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait){
+    esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, event_id, event_data, event_data_size, ticks_to_wait);
 }

@@ -6,21 +6,6 @@
 #ifdef __cplusplus
 
 #include "ha.hpp"
-
-class lvgl_light {
-public:
-    lvgl_light(lv_obj_t *parent, ha_entity *entity);
-
-    lv_obj_t *label;
-    lv_obj_t *icon;
-    lv_obj_t *btn;
-    ha_entity *entity_ptr;
-
-    void callback(lv_obj_t *obj, lv_event_t event);
-
-    void refresh();
-};
-
 extern "C" {
 #endif
 
