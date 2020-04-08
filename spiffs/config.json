@@ -1,0 +1,75 @@
+[
+  {
+    "name": "\uf015",
+    "rows": [
+      [
+        {
+          "type": "temperature",
+          "entity": "weather.home"
+        },
+        {
+          "type": "temperature",
+          "entity": "climate.home"
+        }
+      ],
+      [
+        {
+          "type": "bar_vertical",
+          "entity": "sensor.fresh_tank",
+          "label": "#0000FF \uf043"
+        },
+        {
+          "type": "bar_vertical",
+          "entity": "sensor.grey_tank",
+          "label": "\uf2cd"
+        },
+        {
+          "type": "bar_vertical",
+          "entity": "sensor.black_tank",
+          "label": "\uf7d8"
+        },
+        {
+          "type": "bar_vertical",
+          "entity": "sensor.lpg_tank",
+          "label": "\uf7d8"
+        }
+      ],
+      [
+        {
+          "type": "bar_horizontal",
+          "entity": "sensor.battery",
+          "label": "Bat"
+        }
+      ]
+    ]
+  },
+  {
+    "name": "\uf0eb",
+    "rows": [
+      [
+        {
+          "type": "light",
+          "entity": "light.glass_cabinet",
+          "label": "Glass Cabinet"
+        },
+        {
+          "type": "light",
+          "entity": "light.hue_color_lamp_1",
+          "label": "Hue Lamp 1"
+        }
+      ],
+      [
+        {
+          "type": "light",
+          "entity": "light.hue_color_lamp_2",
+          "label": "Hue Lamp 2"
+        },
+        {
+          "type": "light",
+          "entity": "light.hue_color_lamp_3",
+          "label": "Hue Lamp 3"
+        }
+      ]
+    ]
+  }
+]

@@ -1,6 +1,4 @@
 #include <cstdio>
-#include <deque>
-#include <unordered_map>
 #include <ArduinoJson.h>
 #include <esp_event.h>
 
@@ -27,50 +25,57 @@ void callback_state_events(const JsonDocument &json) {
 void callback_state(const JsonDocument &json) {
     for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
         const char *entity = v["entity_id"];
+        add_entity((const char *)v["id"], (const char *)v["entity_id"]);
         update_entity(entity, v);
+
     }
+    esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, nullptr, 0, 100);
     doc_out["type"] = "subscribe_events";
     doc_out["event_type"] = "state_changed";
     ws_queue_add(doc_out);
 }
 
-void callback_entities(const JsonDocument &json) {
-    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-        std::string id = v["device_id"];
-        std::string entity_id = v["entity_id"];
-        add_entity((char *) id.c_str(), (char *) entity_id.c_str());
-    }
-    esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, nullptr, 0, 100);
-    doc_out["type"] = "get_states";
-    ws_queue_add(doc_out, callback_state);
-}
+//void callback_entities(const JsonDocument &json) {
+//    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+//        std::string id = v["device_id"];
+//        std::string entity_id = v["entity_id"];
+//        add_entity((char *) id.c_str(), (char *) entity_id.c_str());
+//    }
+//    esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, nullptr, 0, 100);
+//    doc_out["type"] = "get_states";
+//    ws_queue_add(doc_out, callback_state);
+//}
 
-void callback_devices(const JsonDocument &json) {
-    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-        std::string name = v["name"];
-        std::string id = v["id"];
-        std::string area_id = v["area_id"];
-        printf("Device: %s, ID: %s, Area: %s\n", name.c_str(), id.c_str(), area_id.c_str());
-        create_device((char *) id.c_str(), (char *) area_id.c_str(), (char *) name.c_str());
-        printf("Device: %s\n", name.c_str());
-    }
-    doc_out["type"] = "config/entity_registry/list";
-    ws_queue_add(doc_out, callback_entities);
-}
+//void callback_devices(const JsonDocument &json) {
+//    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+//        std::string name = v["name"];
+//        std::string id = v["id"];
+//        std::string area_id = v["area_id"];
+//        printf("Device: %s, ID: %s, Area: %s\n", name.c_str(), id.c_str(), area_id.c_str());
+//        create_device((char *) id.c_str(), (char *) area_id.c_str(), (char *) name.c_str());
+//        printf("Device: %s\n", name.c_str());
+//    }
+////    doc_out["type"] = "config/entity_registry/list";
+////    ws_queue_add(doc_out, callback_entities);
+//    doc_out["type"] = "get_states";
+//    ws_queue_add(doc_out, callback_state);
+//}
 
-void callback_area(const JsonDocument &json) {
-    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-        std::string name = v["name"];
-        std::string id = v["area_id"];
-        create_area((char *) id.c_str(), (char *) name.c_str());
-        printf("Area: %s\n", name.c_str());
-    }
-    doc_out["type"] = "config/device_registry/list";
-    ws_queue_add(doc_out, callback_devices);
-}
+//void callback_area(const JsonDocument &json) {
+//    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+//        std::string name = v["name"];
+//        std::string id = v["area_id"];
+//        create_area((char *) id.c_str(), (char *) name.c_str());
+//        printf("Area: %s\n", name.c_str());
+//    }
+//    doc_out["type"] = "config/device_registry/list";
+//    ws_queue_add(doc_out, callback_devices);
+//}
 
 
 void callback_auth() {
-    doc_out["type"] = "config/area_registry/list";
-    ws_queue_add(doc_out, callback_area);
+//    doc_out["type"] = "config/area_registry/list";
+//    ws_queue_add(doc_out, callback_area);
+    doc_out["type"] = "get_states";
+    ws_queue_add(doc_out, callback_state);
 }

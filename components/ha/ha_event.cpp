@@ -19,7 +19,7 @@ void ha_event_init(void) {
             .queue_size = 16,
             .task_name = "ha_event",
             .task_priority = 0,
-            .task_stack_size = 2000,
+            .task_stack_size = 10000,
             .task_core_id = 0
     };
     esp_event_loop_create(&loop_args, &ha_event_loop_hdl);

@@ -1,5 +1,4 @@
 #include <vector>
-#include <cstring>
 #include <deque>
 #include <unordered_map>
 #include <csignal>
@@ -39,18 +38,18 @@ void ws_queue_add(JsonDocument &doc, void (*f)(const JsonDocument &json)) {
     } else {
         CallbackMap.emplace(0, f);
     }
-    std::string message;
-    serializeJson(doc, message);
-    esp_websocket_client_send_text(client, message.c_str(), message.length(), portMAX_DELAY);
+    char message[500];
+    serializeJson(doc, message, sizeof(message));
+    esp_websocket_client_send_text(client, message, strlen(message), portMAX_DELAY);
     doc.clear();
 }
 
 void ws_queue_add(JsonDocument &doc) {
     doc["id"] = message_id;
     message_id++;
-    std::string message;
-    serializeJson(doc, message);
-    esp_websocket_client_send_text(client, message.c_str(), message.length(), portMAX_DELAY);
+    char message[500];
+    serializeJson(doc, message, sizeof(message));
+    esp_websocket_client_send_text(client, message, strlen(message), portMAX_DELAY);
     doc.clear();
 }
 
@@ -139,6 +138,7 @@ void json_task(void *pvParameters) {
     filter["result"][0]["entity_id"] = true;
     filter["result"][0]["state"] = true;
     filter["result"][0]["attributes"] = true;
+    filter["result"][0]["context"]["id"] = true;
     filter["event"]["event_type"] = true;
     filter["event"]["data"]["entity_id"] = true;
     filter["event"]["data"]["new_state"]["state"] = true;
@@ -246,13 +246,13 @@ void websocket_init(void) {
 
     while (true) {
         if (esp_websocket_client_is_connected(client)) {
-            StaticJsonDocument<300> doc_out;
-            doc_out["type"] = "auth";
-            doc_out["access_token"] = CONFIG_HA_KEY;
+            StaticJsonDocument<300> doc;
+            doc["type"] = "auth";
+            doc["access_token"] = CONFIG_HA_KEY;
             message_id++;
-            std::string message;
-            serializeJson(doc_out, message);
-            esp_websocket_client_send_text(client, message.c_str(), message.length(), portMAX_DELAY);
+            char message[500];
+            serializeJson(doc, message, sizeof(message));
+            esp_websocket_client_send_text(client, message, strlen(message), portMAX_DELAY);
             break;
         }
     }

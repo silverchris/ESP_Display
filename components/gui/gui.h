@@ -11,13 +11,13 @@ extern "C" {
 
 void gui_init();
 
-void main_tab(lv_obj_t *parent);
-
-void light_tab(lv_obj_t *parent);
-
-void update_tanks(int16_t water, int16_t grey, int16_t black, int16_t lpg);
-
-void update_battery(int16_t battery);
+//void main_tab(lv_obj_t *parent);
+//
+//void light_tab(lv_obj_t *parent);
+//
+//void update_tanks(int16_t water, int16_t grey, int16_t black, int16_t lpg);
+//
+//void update_battery(int16_t battery);
 
 extern lv_style_t style_tv_btn_rel;
 extern lv_style_t style_tv_btn_pr;
