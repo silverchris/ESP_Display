@@ -9,7 +9,7 @@
 #include "ha_event.h"
 #include "websocket.h"
 
-#include "entities.h"
+#include "ha_entities.h"
 
 ha_entity::ha_entity(const char *entity_id, const char *dname) {
     printf("Creating entity: %s\n", id);

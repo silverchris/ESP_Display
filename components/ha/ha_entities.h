@@ -2,8 +2,8 @@
 // Created by silverchris on 2020-04-07.
 //
 
-#ifndef ESP_DISPLAY_ENTITIES_H
-#define ESP_DISPLAY_ENTITIES_H
+#ifndef ESP_DISPLAY_HA_ENTITIES_H
+#define ESP_DISPLAY_HA_ENTITIES_H
 
 #include <vector>
 #include <ArduinoJson.h>
@@ -148,4 +148,4 @@ public:
 
 };
 
-#endif //ESP_DISPLAY_ENTITIES_H
+#endif //ESP_DISPLAY_HA_ENTITIES_H

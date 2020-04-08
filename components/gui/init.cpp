@@ -23,7 +23,7 @@
 #include "widgets.h"
 #include "ha.hpp"
 #include "ha_event.h"
-#include "entities.h"
+#include "ha_entities.h"
 
 void callback_func(lv_obj_t *obj, lv_event_t event) {
     auto data = (lvgl_callback)lv_obj_get_user_data(obj);

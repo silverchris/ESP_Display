@@ -7,7 +7,7 @@
 #include <map>
 #include <ArduinoJson.h>
 
-#include "entities.h"
+#include "ha_entities.h"
 
 struct StrCompare : public std::binary_function<const char*, const char*, bool> {
 public:

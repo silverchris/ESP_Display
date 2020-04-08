@@ -7,7 +7,7 @@
 
 #include "lvgl/lvgl.h"
 
-#include "entities.h"
+#include "ha_entities.h"
 
 #include "gui.h"
 

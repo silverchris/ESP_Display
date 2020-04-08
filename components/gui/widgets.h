@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 
 #include "ha.hpp"
-#include "entities.h"
+#include "ha_entities.h"
 
 class widget_base {
 public:

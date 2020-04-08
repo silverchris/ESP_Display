@@ -8,7 +8,7 @@
 
 
 #include "ha.hpp"
-#include "entities.h"
+#include "ha_entities.h"
 
 
 //std::unordered_map<char *, ha_device *, cmp_str> ha_devices;
