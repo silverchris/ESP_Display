@@ -148,4 +148,12 @@ public:
 
 };
 
+class EntityFactory {
+public:
+    virtual ha_entity *create(const char *entity_id, const char *dname) = 0;
+};
+
+ha_entity *new_entity(const char *entity_id, const char *dname);
+
+
 #endif //ESP_DISPLAY_HA_ENTITIES_H

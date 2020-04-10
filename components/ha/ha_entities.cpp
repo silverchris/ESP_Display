@@ -110,3 +110,47 @@ void ha_entity_sensor::update(JsonObjectConst &doc) {
     }
     ha_entity::update(doc);
 }
+
+class SwitchEntityFactory : public EntityFactory {
+    ha_entity *create(const char *entity_id, const char *dname) {
+        return new ha_entity_switch(entity_id, dname);
+    }
+};
+
+class LightEntityFactory : public EntityFactory {
+    ha_entity *create(const char *entity_id, const char *dname) {
+        return new ha_entity_light(entity_id, dname);
+    }
+};
+
+class WeatherEntityFactory : public EntityFactory {
+    ha_entity *create(const char *entity_id, const char *dname) {
+        return new ha_entity_weather(entity_id, dname);
+    }
+};
+
+class SensorEntityFactory : public EntityFactory {
+    ha_entity *create(const char *entity_id, const char *dname) {
+        return new ha_entity_sensor(entity_id, dname);
+    }
+};
+
+typedef std::map<const char *, EntityFactory *, StrCompare> EntitybyName;
+
+ha_entity *new_entity(const char *entity_id, const char *dname) {
+    EntitybyName entity_by_name;
+    entity_by_name["switch"] = new SwitchEntityFactory();
+    entity_by_name["light"] = new LightEntityFactory();
+    entity_by_name["weather"] = new WeatherEntityFactory();
+    entity_by_name["sensor"] = new SensorEntityFactory();
+
+    char entity[20];
+    strncpy(entity, entity_id, 20);
+    strtok(entity, ".");
+
+    if (entity_by_name.count(entity) > 0) {
+        EntityFactory *factory = entity_by_name[entity];
+        return factory->create(entity_id, dname);
+    }
+    return nullptr;
+}

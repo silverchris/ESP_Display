@@ -9,10 +9,9 @@
 
 #include "ha_entities.h"
 
-struct StrCompare : public std::binary_function<const char*, const char*, bool> {
+struct StrCompare : public std::binary_function<const char *, const char *, bool> {
 public:
-    bool operator() (const char* str1, const char* str2) const
-    { return std::strcmp(str1, str2) < 0; }
+    bool operator()(const char *str1, const char *str2) const { return std::strcmp(str1, str2) < 0; }
 };
 
 
