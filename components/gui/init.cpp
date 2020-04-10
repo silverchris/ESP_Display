@@ -132,6 +132,15 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
 }
 
 
+uint32_t get_activity(){
+    uint32_t activity = 0;
+    if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
+        activity = lv_disp_get_inactive_time(NULL);
+        xSemaphoreGive(xGuiSemaphore);
+    }
+    return activity;
+}
+
 void guiTask() {
     xGuiSemaphore = xSemaphoreCreateMutex();
 

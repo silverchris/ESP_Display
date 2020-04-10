@@ -7,6 +7,7 @@
 #include "wifi.h"
 #include "spiffs.h"
 #include "httpd.h"
+#include "backlight.h"
 
 #include "gui.h"
 #include "websocket.h"
@@ -24,6 +25,8 @@ void app_main() {
 
     ha_event_init();
     gui_init();
+    backlight_init();
+
     websocket_init();
 
     while(1){
