@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 
 #include "freertos/task.h"
+#include "esp_timer.h"
 
 #include "lvgl/lvgl.h"
 
@@ -54,14 +55,45 @@ lvgl_light::lvgl_light(lv_obj_t *parent, ha_entity_light *entity, const char *la
     }
     lv_btn_set_state(btn, (entity_ptr->state != 0) ? LV_BTN_STYLE_TGL_REL : LV_BTN_STYLE_TGL_PR);
 
+    dim_direction = 0;
+    press_time = 0;
+
 }
 
 void lvgl_light::callback(lv_obj_t *obj, lv_event_t event) {
-    if (event == LV_EVENT_CLICKED) {
+    uint32_t press = (uint32_t) esp_timer_get_time() / 1000;
+    if (event == LV_EVENT_SHORT_CLICKED) {
         if (lv_btn_get_state(btn) != LV_BTN_STATE_INA) {
             lv_btn_set_state(btn, LV_BTN_STATE_INA);
             entity_ptr->toggle();
         }
+    } else if (event == LV_EVENT_PRESSING) {
+        if (press_time == 0) {
+            press_time = press;
+        }
+        if (press - press_time >= 500) {
+            int dim = entity_ptr->brightness;
+            if (dim_direction) {
+                dim += 10;
+            } else {
+                dim -= 10;
+            }
+            if (dim < 0 || dim > 254) {
+                dim_direction = !dim_direction;
+                if(dim < 0){
+                    dim = 0;
+                } else {
+                    dim = 254;
+                }
+            }
+            entity_ptr->dim(dim);
+            printf("Long pressed %s, press time %u, brightness: %u, dim direction: %i\n", entity_ptr->id,
+                   press - press_time, entity_ptr->brightness, dim_direction);
+            press_time = press;
+        }
+    } else if (event == LV_EVENT_RELEASED) {
+        press_time = 0;
+
     }
 }
 

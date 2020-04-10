@@ -21,6 +21,8 @@ public:
     lv_obj_t *icon;
     lv_obj_t *btn;
     ha_entity_light *entity_ptr;
+    uint32_t press_time;
+    bool dim_direction; // false for down, true for up
 
     void callback(lv_obj_t *obj, lv_event_t event) override;
 

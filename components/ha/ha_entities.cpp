@@ -5,7 +5,7 @@
 
 #include <ArduinoJson.h>
 
-
+#include "ha.hpp"
 #include "ha_event.h"
 #include "websocket.h"
 
@@ -48,8 +48,15 @@ void ha_entity_switch::update(JsonObjectConst &doc) {
     ha_entity::update(doc);
 }
 
-void ha_entity_light::dim(uint8_t) {
-
+void ha_entity_light::dim(uint8_t dim_value) {
+    StaticJsonDocument<300> doc_out;
+    doc_out["type"] = "call_service";
+    doc_out["domain"] = "light";
+    doc_out["service"] = "turn_on";
+    doc_out["service_data"]["entity_id"] = id;
+    doc_out["service_data"]["transition"] = 1;
+    doc_out["service_data"]["brightness"] = (uint8_t)dim_value;
+    ws_queue_add(doc_out);
 }
 
 void ha_entity_light::toggle() {
