@@ -15,21 +15,6 @@ public:
 };
 
 
-//class ha_device {
-//public:
-//    explicit ha_device(char *name);
-//
-//    ha_entity *add_entity(char *entity_id, char *name);
-//
-//    void toggle();
-//
-//    void off();
-//
-//    void on();
-//
-//    char device_name[50] = "";
-//    std::unordered_map<ha_entity_type, ha_entity *> entities;
-//};
 
 
 //struct ha_area {
@@ -42,10 +27,6 @@ public:
 //extern std::unordered_map<std::string, ha_area *> ha_areas;
 
 //extern std::unordered_map<char *, ha_entity *, cmp_str> ha_entities;
-
-//void create_device(char *id, char *area_id, char *name);
-//
-//void destroy_device(char *id);
 
 void add_entity(const char *id, const char *entity_id);
 

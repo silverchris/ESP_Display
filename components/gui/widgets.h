@@ -9,6 +9,7 @@
 class widget_base {
 public:
     virtual void refresh() {};
+
     virtual void callback(lv_obj_t *obj, lv_event_t event) {};
 
 };

@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include <freertos/FreeRTOS.h>
 #include <esp_event_base.h>
 #include <esp_event.h>
@@ -19,12 +20,13 @@ enum {
     HA_EVENT_UPDATE
 };
 
-struct ha_event_data{
+struct ha_event_data {
     void *ptr;
 };
 
 
 void ha_event_init(void);
+
 void ha_event_deinit();
 
 void ha_event_post(int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);

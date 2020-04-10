@@ -1,5 +1,4 @@
 #include <sys/unistd.h>
-#include <sys/stat.h>
 #include <iostream>
 #include <fstream>
 
@@ -11,8 +10,6 @@
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "esp_spiffs.h"
-
 
 
 #include <ArduinoJson.h>
@@ -26,9 +23,9 @@
 #include "ha_entities.h"
 
 void callback_func(lv_obj_t *obj, lv_event_t event) {
-    auto data = (lvgl_callback)lv_obj_get_user_data(obj);
+    auto data = (lvgl_callback) lv_obj_get_user_data(obj);
     if (data.widget != nullptr) {
-        ((widget_base *)data.widget)->callback(obj, event);
+        ((widget_base *) data.widget)->callback(obj, event);
     }
 }
 
@@ -44,35 +41,32 @@ void load_gui_config(lv_obj_t *tv) {
     error = deserializeJson(config, config_file);
 
     if (error) {
-        printf("deserializeJson() failed: %s\n", error.c_str());
+        ESP_LOGE("CONFIG", "deserializeJson() failed: %s\n", error.c_str());
         config.clear();
     }
     lv_obj_t *cont = nullptr;
     for (JsonObject page: config.as<JsonArray>()) {
-        lv_obj_t *tab = lv_tabview_add_tab(tv, (const char*)page["name"]);
-            for (JsonArray row: page["rows"].as<JsonArray>()) {
-                lv_page_set_style(tab, LV_PAGE_STYLE_SCRL, &lv_style_transp_fit);
-                lv_page_set_scrl_layout(tab, LV_LAYOUT_CENTER);
+        lv_obj_t *tab = lv_tabview_add_tab(tv, (const char *) page["name"]);
+        for (JsonArray row: page["rows"].as<JsonArray>()) {
+            lv_page_set_style(tab, LV_PAGE_STYLE_SCRL, &lv_style_transp_fit);
+            lv_page_set_scrl_layout(tab, LV_LAYOUT_CENTER);
 
-                cont = lv_cont_create(tab, nullptr);
-                printf("Container PTR: %p\n", cont);
-                lv_cont_set_layout(cont, LV_LAYOUT_PRETTY);
-                lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp_tight);
-                lv_cont_set_fit2(cont, LV_FIT_FLOOD, LV_FIT_TIGHT);
+            cont = lv_cont_create(tab, nullptr);
+            lv_cont_set_layout(cont, LV_LAYOUT_PRETTY);
+            lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp_tight);
+            lv_cont_set_fit2(cont, LV_FIT_FLOOD, LV_FIT_TIGHT);
 
-                for (JsonObject item: row) {
-                    printf("\t%s", (const char *) item["type"]);
-                    printf("\t%s\n", (const char *) item["entity"]);
-                    const char *label = nullptr;
-                    if(item.containsKey("label")){
-                        label = item["label"];
-                    }
-                    ha_entity *entity = get_entity((const char *) item["entity"]);
-                    if(entity != nullptr){
-                        get_widget_by_type(item["type"].as<char *>(), cont, entity, label, &callback_func);
-                    }
+            for (JsonObject item: row) {
+                const char *label = nullptr;
+                if (item.containsKey("label")) {
+                    label = item["label"];
+                }
+                ha_entity *entity = get_entity((const char *) item["entity"]);
+                if (entity != nullptr) {
+                    get_widget_by_type(item["type"].as<char *>(), cont, entity, label, &callback_func);
                 }
             }
+        }
     }
     config_file.close();
 
@@ -132,10 +126,10 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
 }
 
 
-uint32_t get_activity(){
+uint32_t get_activity() {
     uint32_t activity = 0;
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
-        activity = lv_disp_get_inactive_time(NULL);
+        activity = lv_disp_get_inactive_time(nullptr);
         xSemaphoreGive(xGuiSemaphore);
     }
     return activity;
@@ -168,14 +162,14 @@ void guiTask() {
 #endif
 
     LV_FONT_DECLARE(Symbols);
-    lv_theme_t *th = lv_theme_material_init(270, NULL);
+    lv_theme_t *th = lv_theme_material_init(270, nullptr);
     lv_theme_set_current(th);
     style_setup();
 
     /*Create a Preloader object*/
-    lv_obj_t *preload = lv_preload_create(lv_scr_act(), NULL);
+    lv_obj_t *preload = lv_preload_create(lv_scr_act(), nullptr);
     lv_obj_set_size(preload, 100, 100);
-    lv_obj_align(preload, NULL, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(preload, nullptr, LV_ALIGN_CENTER, 0, 0);
     lv_preload_set_style(preload, LV_PRELOAD_STYLE_MAIN, &style_preload);
 
 

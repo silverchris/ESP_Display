@@ -17,7 +17,6 @@ void callback_state_events(const JsonDocument &json) {
             const char *entity = event["entity_id"];
             JsonObjectConst new_state = event["new_state"];
             update_entity(entity, new_state);
-            printf("Event %s\n", entity);
         }
     }
 }
@@ -25,7 +24,7 @@ void callback_state_events(const JsonDocument &json) {
 void callback_state(const JsonDocument &json) {
     for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
         const char *entity = v["entity_id"];
-        add_entity((const char *)v["id"], (const char *)v["entity_id"]);
+        add_entity((const char *) v["id"], (const char *) v["entity_id"]);
         update_entity(entity, v);
 
     }

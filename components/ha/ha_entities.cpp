@@ -1,4 +1,3 @@
-#include <vector>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -14,7 +13,7 @@
 ha_entity::ha_entity(const char *entity_id, const char *dname) {
     printf("Creating entity: %s\n", id);
     strncpy(id, entity_id, sizeof(id));
-    if(dname != nullptr){
+    if (dname != nullptr) {
         strncpy(name, dname, sizeof(name));
     }
 
@@ -55,7 +54,7 @@ void ha_entity_light::dim(uint8_t dim_value) {
     doc_out["service"] = "turn_on";
     doc_out["service_data"]["entity_id"] = id;
     doc_out["service_data"]["transition"] = 1;
-    doc_out["service_data"]["brightness"] = (uint8_t)dim_value;
+    doc_out["service_data"]["brightness"] = (uint8_t) dim_value;
     ws_queue_add(doc_out);
 }
 
@@ -104,33 +103,34 @@ void ha_entity_weather::update(JsonObjectConst &doc) {
 }
 
 void ha_entity_sensor::update(JsonObjectConst &doc) {
-    state = strtol((const char *)doc["state"], nullptr, 10);
-    if(doc["attributes"].containsKey("unit_of_measurement")){
-        strncpy(unit_of_measurement, (const char *) doc["attributes"]["unit_of_measurement"], sizeof(unit_of_measurement));
+    state = atoi((const char *) doc["state"]);
+    if (doc["attributes"].containsKey("unit_of_measurement")) {
+        strncpy(unit_of_measurement, (const char *) doc["attributes"]["unit_of_measurement"],
+                sizeof(unit_of_measurement));
     }
     ha_entity::update(doc);
 }
 
 class SwitchEntityFactory : public EntityFactory {
-    ha_entity *create(const char *entity_id, const char *dname) {
+    ha_entity *create(const char *entity_id, const char *dname) override {
         return new ha_entity_switch(entity_id, dname);
     }
 };
 
 class LightEntityFactory : public EntityFactory {
-    ha_entity *create(const char *entity_id, const char *dname) {
+    ha_entity *create(const char *entity_id, const char *dname) override {
         return new ha_entity_light(entity_id, dname);
     }
 };
 
 class WeatherEntityFactory : public EntityFactory {
-    ha_entity *create(const char *entity_id, const char *dname) {
+    ha_entity *create(const char *entity_id, const char *dname) override {
         return new ha_entity_weather(entity_id, dname);
     }
 };
 
 class SensorEntityFactory : public EntityFactory {
-    ha_entity *create(const char *entity_id, const char *dname) {
+    ha_entity *create(const char *entity_id, const char *dname) override {
         return new ha_entity_sensor(entity_id, dname);
     }
 };

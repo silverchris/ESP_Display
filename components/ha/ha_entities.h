@@ -1,7 +1,3 @@
-//
-// Created by silverchris on 2020-04-07.
-//
-
 #ifndef ESP_DISPLAY_HA_ENTITIES_H
 #define ESP_DISPLAY_HA_ENTITIES_H
 
@@ -82,7 +78,7 @@ public:
 
     void toggle();
 
-    void features(void * feature_struct) override ;
+    void features(void *feature_struct) override;
 
     int brightness = 0;
     int color_temp = 0;
@@ -112,7 +108,7 @@ enum ha_weather_states {
     HA_WEATHER_WINDY_VARIANT
 };
 
-class ha_entity_weather: public ha_entity {
+class ha_entity_weather : public ha_entity {
 
 
 public:
@@ -133,7 +129,7 @@ public:
 
 };
 
-class ha_entity_sensor: public ha_entity {
+class ha_entity_sensor : public ha_entity {
 
 public:
     ha_entity_type type = ha_entity_type::ha_sensor;
@@ -143,7 +139,6 @@ public:
     ha_entity_sensor(const char *entity_id, const char *dname) : ha_entity(entity_id, dname) {}
 
     void update(JsonObjectConst &doc) override;
-
 
 
 };

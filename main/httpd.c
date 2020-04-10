@@ -15,12 +15,11 @@ static const char *TAG = "httpd";
 #define MAXBUFLEN 10000
 
 /* An HTTP GET handler */
-static esp_err_t file_get_handler(httpd_req_t *req)
-{
+static esp_err_t file_get_handler(httpd_req_t *req) {
 
     /* Send response with custom headers and body set as the
      * string passed in user context*/
-    const char* resp_str = (const char*) req->user_ctx;
+    const char *resp_str = (const char *) req->user_ctx;
     char *buf = calloc(sizeof(char), MAXBUFLEN);
     char file[50] = "/spiffs/";
     strcat(file, resp_str);
@@ -28,10 +27,10 @@ static esp_err_t file_get_handler(httpd_req_t *req)
     FILE *fp = fopen(file, "r");
     if (fp != NULL) {
         size_t newLen = fread(buf, sizeof(char), MAXBUFLEN, fp);
-        if ( ferror( fp ) != 0 ) {
+        if (ferror(fp) != 0) {
             fputs("Error reading file", stderr);
         } else {
-            buf[newLen++] = '\0'; /* Just to be safe. */
+            buf[newLen + 1] = '\0'; /* Just to be safe. */
         }
         fclose(fp);
     }
@@ -67,8 +66,7 @@ static const httpd_uri_t config_page = {
 };
 
 /* An HTTP POST handler */
-static esp_err_t echo_post_handler(httpd_req_t *req)
-{
+static esp_err_t echo_post_handler(httpd_req_t *req) {
     char buf[100];
     int ret, remaining = req->content_len;
 
@@ -116,8 +114,7 @@ static const httpd_uri_t echo = {
  * client to infer if the custom error handler is functioning as expected
  * by observing the socket state.
  */
-esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
-{
+esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err) {
     if (strcmp("/hello", req->uri) == 0) {
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "/hello URI is not available");
         /* Return ESP_OK to keep underlying socket open */
@@ -132,8 +129,7 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
     return ESP_FAIL;
 }
 
-static httpd_handle_t start_webserver(void)
-{
+static httpd_handle_t start_webserver(void) {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
@@ -152,16 +148,14 @@ static httpd_handle_t start_webserver(void)
     return NULL;
 }
 
-static void stop_webserver(httpd_handle_t server)
-{
+static void stop_webserver(httpd_handle_t server) {
     // Stop the httpd server
     httpd_stop(server);
 }
 
-static void disconnect_handler(void* arg, esp_event_base_t event_base,
-                               int32_t event_id, void* event_data)
-{
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+static void disconnect_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data) {
+    httpd_handle_t *server = (httpd_handle_t *) arg;
     if (*server) {
         ESP_LOGI(TAG, "Stopping webserver");
         stop_webserver(*server);
@@ -169,10 +163,9 @@ static void disconnect_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-static void connect_handler(void* arg, esp_event_base_t event_base,
-                            int32_t event_id, void* event_data)
-{
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+static void connect_handler(void *arg, esp_event_base_t event_base,
+                            int32_t event_id, void *event_data) {
+    httpd_handle_t *server = (httpd_handle_t *) arg;
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
@@ -180,7 +173,7 @@ static void connect_handler(void* arg, esp_event_base_t event_base,
 }
 
 
-void httpd_init(void){
+void httpd_init(void) {
     static httpd_handle_t server = NULL;
 
 

@@ -28,6 +28,7 @@ extern lv_style_t style_preload;
 
 
 void style_setup(void);
+
 uint32_t get_activity();
 
 #ifdef __cplusplus

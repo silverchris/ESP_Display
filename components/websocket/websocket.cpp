@@ -1,26 +1,24 @@
 #include <vector>
-#include <deque>
 #include <unordered_map>
 #include <csignal>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
-
 #include "esp_log.h"
 #include "esp_websocket_client.h"
 #include "esp_event.h"
-
-static const char *TAG = "WEBSOCKET";
 
 #include <ArduinoJson.h>
 
 #include "websocket.h"
 
-#include "callbacks.hpp"
+#include "ha_callbacks.h"
 
 #define STREAM_TIMEOUT 1000000  // default number of micro-seconds to wait
 #define WS_BUFFER_SIZE 4000
+
+static const char *TAG = "WEBSOCKET";
 
 TaskHandle_t json_task_handle;
 
@@ -64,7 +62,6 @@ int CustomReader::read() {
                 if (c != -2) {
                     buf.pop_front();
                 }
-//                printf("get: %c %i\n", c, c);
             }
             xSemaphoreGive(lock);
         }
@@ -72,11 +69,7 @@ int CustomReader::read() {
             return c;
         if (c >= 0)
             return c;
-        if (STREAM_TIMEOUT == 0)
-            return -1;
         vTaskDelay(25);
-//        taskYIELD();
-
     } while (esp_timer_get_time() - _startMillis < STREAM_TIMEOUT);
     return -1;     // -1 indicates timeout
 }
@@ -202,16 +195,15 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
             ESP_LOGI(TAG, "WEBSOCKET_EVENT_DISCONNECTED");
             break;
         case WEBSOCKET_EVENT_DATA:
-            ESP_LOGI(TAG, "WEBSOCKET_EVENT_DATA");
-//            ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
-//            ESP_LOGI(TAG, "Data Len=%d", data->data_len);
-//            ESP_LOGI(TAG, "Payload Len=%d", data->payload_len);
-//            ESP_LOGI(TAG, "Payload Offset=%d", data->payload_offset);
-//            ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
+            ESP_LOGD(TAG, "WEBSOCKET_EVENT_DATA");
+            ESP_LOGD(TAG, "Received opcode=%d", data->op_code);
+            ESP_LOGD(TAG, "Data Len=%d", data->data_len);
+            ESP_LOGD(TAG, "Payload Len=%d", data->payload_len);
+            ESP_LOGD(TAG, "Payload Offset=%d", data->payload_offset);
+            ESP_LOGD(TAG, "Received=%.*s\r\n", data->data_len, (char *) data->data_ptr);
             if (data->op_code == 1) {
                 jsonstream->fill((char *) data->data_ptr, (size_t) data->data_len);
                 if (data->payload_offset + data->data_len >= data->payload_len) {
-//                    ESP_LOGI(TAG, "data->payload_offset + data->data_len=%i", data->payload_offset + data->data_len);
                     jsonstream->putc(-2);
                 }
                 vTaskResume(json_task_handle);

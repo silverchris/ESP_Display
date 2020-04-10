@@ -14,10 +14,6 @@
 #include "ha_event.h"
 
 
-
-
-
-
 void app_main() {
     spiffs_init();
     wifi_init();
@@ -29,9 +25,12 @@ void app_main() {
 
     websocket_init();
 
-    while(1){
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+    while (1) {
         printf("Heap free %i\n", xPortGetFreeHeapSize());
         vTaskDelay(250);
     }
+#pragma clang diagnostic pop
 
 }
