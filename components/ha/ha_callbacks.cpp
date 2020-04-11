@@ -6,6 +6,8 @@
 #include "websocket.h"
 
 #include "ha.hpp"
+#include "ha_entities.h"
+#include "ha_devices.h"
 
 StaticJsonDocument<100> doc_out;
 
@@ -34,31 +36,25 @@ void callback_state(const JsonDocument &json) {
     ws_queue_add(doc_out);
 }
 
-//void callback_entities(const JsonDocument &json) {
-//    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-//        std::string id = v["device_id"];
-//        std::string entity_id = v["entity_id"];
-//        add_entity((char *) id.c_str(), (char *) entity_id.c_str());
-//    }
+void callback_entities(const JsonDocument &json) {
+    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+        const char * id = v["device_id"];
+        const char * entity_id = v["entity_id"];
+        device_entity_assoc(id, entity_id);
+    }
 //    esp_event_post_to(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, nullptr, 0, 100);
 //    doc_out["type"] = "get_states";
 //    ws_queue_add(doc_out, callback_state);
-//}
+}
 
-//void callback_devices(const JsonDocument &json) {
-//    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-//        std::string name = v["name"];
-//        std::string id = v["id"];
-//        std::string area_id = v["area_id"];
-//        printf("Device: %s, ID: %s, Area: %s\n", name.c_str(), id.c_str(), area_id.c_str());
-//        create_device((char *) id.c_str(), (char *) area_id.c_str(), (char *) name.c_str());
-//        printf("Device: %s\n", name.c_str());
-//    }
-////    doc_out["type"] = "config/entity_registry/list";
-////    ws_queue_add(doc_out, callback_entities);
-//    doc_out["type"] = "get_states";
-//    ws_queue_add(doc_out, callback_state);
-//}
+void callback_devices(const JsonDocument &json) {
+    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
+        const char * name = v["name"];
+        const char * id = v["id"];
+        const char * area_id = v["area_id"];
+        add_device(id, area_id, name);
+    }
+}
 
 //void callback_area(const JsonDocument &json) {
 //    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {

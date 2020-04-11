@@ -8,6 +8,7 @@
 #include <ArduinoJson.h>
 
 #include "ha_entities.h"
+#include "ha_devices.h"
 
 struct StrCompare : public std::binary_function<const char *, const char *, bool> {
 public:
@@ -15,24 +16,17 @@ public:
 };
 
 
-
-
-//struct ha_area {
-//    char name[50];
-//    std::unordered_map<std::string, ha_device *> devices;
-//};
-
-//extern std::unordered_map<std::string, ha_device *> ha_devices;
-//
-//extern std::unordered_map<std::string, ha_area *> ha_areas;
-
-//extern std::unordered_map<char *, ha_entity *, cmp_str> ha_entities;
-
 void add_entity(const char *id, const char *entity_id);
 
 void update_entity(const char *entity_id, JsonObjectConst &doc);
 
 ha_entity *get_entity(const char *entity_id);
+
+void add_device(const char *id, const char *name, const char *area);
+
+ha_device *get_device(const char *device_id);
+
+void device_entity_assoc(const char * deviceid, const char *entityid);
 
 //void create_area(char *id, char *name);
 //

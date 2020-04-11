@@ -6,11 +6,13 @@
 
 #include "ha.hpp"
 #include "ha_entities.h"
+#include "ha_devices.h"
+#include "ha_areas.h"
 
 
-//std::unordered_map<char *, ha_device *, cmp_str> ha_devices;
-//
-//std::unordered_map<char *, ha_area *, cmp_str> ha_areas;
+std::map<const char *, ha_device *, StrCompare> ha_devices;
+
+//std::map<const char *, ha_area *, StrCompare> ha_areas;
 
 std::map<const char *, ha_entity *, StrCompare> ha_entities;
 
@@ -26,22 +28,43 @@ void add_entity(const char *id, const char *entity_id) {
 }
 
 void update_entity(const char *entity_id, JsonObjectConst &doc) {
-    printf("updating: %s, %i\n", entity_id, ha_entities.count(entity_id));
     if (ha_entities.count(entity_id)) {
         ha_entities[entity_id]->update(doc);
-        printf("%s %i\n", entity_id, ha_entities[entity_id]->state);
     }
 }
 
 ha_entity *get_entity(const char *entity_id) {
-    printf("getting: %s, %i\n", entity_id, ha_entities.count(entity_id));
     if (ha_entities.count(entity_id)) {
         ha_entity *entity = nullptr;
         entity = ha_entities[entity_id];
-        printf("entity ptr: %p\n", entity);
         return entity;
     }
     return nullptr;
+}
+
+void add_device(const char *id, const char *name, const char *area) {
+    ha_device *device = nullptr;
+
+    device = new_device(name, area);
+    if (device != nullptr) {
+        ha_devices.emplace(id, device);
+    }
+}
+
+
+ha_device *get_device(const char *device_id){
+    if (ha_devices.count(device_id)) {
+        ha_device *device = nullptr;
+        device = ha_devices[device_id];
+        return device;
+    }
+    return nullptr;
+}
+
+void device_entity_assoc(const char * deviceid, const char *entityid){
+    if(ha_entities.count(entityid) > 0 && ha_devices.count(deviceid)){
+        ha_devices[deviceid]->add_entity(ha_entities[entityid]);
+    }
 }
 
 //void create_area(char *id, char *name) {
