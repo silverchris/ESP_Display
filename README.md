@@ -23,4 +23,7 @@ No additional configuration or modification of your home assistant configuration
 
 ESP_Display is configured with a json file. An example is located in [/spiffs/config.json](/spiffs/config.json)
 
+![Screenshot 1](/Extras/screenshot1.jpg?raw=true "A screenshot of the example config")
+![Screenshot 2](/Extras/screenshot2.jpg?raw=true "A screenshot of the example config")
+
 Currently the WiFi settings, Home Assistant Address, and Home Assistant API key is set at compile time
