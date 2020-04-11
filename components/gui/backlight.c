@@ -8,9 +8,13 @@
 #include "gui.h"
 
 // GPIO 21
+uint8_t backlight_state;
+uint8_t backlight_level;
 
-void backlight_set(int percent) {
-    uint32_t value = (uint32_t) ((float) percent / 100.00) * 8191;
+void backlight_set(uint8_t percent) {
+    backlight_level = percent;
+    uint32_t value = (uint32_t) ((float) (percent / 100.00) * 8191.00);
+    printf("Setting backlight to %u\n", value);
 
     ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, value);
     ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
@@ -21,7 +25,6 @@ void backlight_off() {
     ledc_fade_start(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
 }
 
-uint8_t backlight_state;
 
 void backlight_task(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     backlight_state = 1;
@@ -72,6 +75,8 @@ void backlight_init(void) {
 
     ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, 8191);
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+
+    backlight_level = 100;
 
     xTaskCreate((TaskFunction_t) backlight_task, "backlight_task", 1000, NULL, 0, NULL);
 }
