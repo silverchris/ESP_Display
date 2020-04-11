@@ -45,12 +45,12 @@ lvgl_light::lvgl_light(lv_obj_t *parent, ha_entity_light *entity, const char *la
     lv_label_set_text(label, txt);
     lv_label_set_style(label, LV_LABEL_STYLE_MAIN, &style_label_small);
 
-    if (entity_ptr->state != 0) {
+    if (entity_ptr->getState() != 0) {
         lv_label_set_text(icon, "#FFFF00 \xEF\x83\xAB#");
     } else {
         lv_label_set_text(icon, "#FFFFFF \xEF\x83\xAB#");
     }
-    lv_btn_set_state(btn, (entity_ptr->state != 0) ? LV_BTN_STYLE_TGL_REL : LV_BTN_STYLE_TGL_PR);
+    lv_btn_set_state(btn, (entity_ptr->getState() != 0) ? LV_BTN_STYLE_TGL_REL : LV_BTN_STYLE_TGL_PR);
 
     dim_direction = false;
     press_time = 0;
@@ -94,12 +94,12 @@ void lvgl_light::callback(lv_obj_t *obj, lv_event_t event) {
 }
 
 void lvgl_light::refresh() {
-    if (entity_ptr->state != 0) {
+    if (entity_ptr->getState() != 0) {
         lv_label_set_text(icon, "#FFFF00 \xEF\x83\xAB#");
     } else {
         lv_label_set_text(icon, "#FFFFFF \xEF\x83\xAB#");
     }
-    lv_btn_set_state(btn, (entity_ptr->state != 0) ? LV_BTN_STYLE_TGL_REL : LV_BTN_STYLE_TGL_PR);
+    lv_btn_set_state(btn, (entity_ptr->getState() != 0) ? LV_BTN_STYLE_TGL_REL : LV_BTN_STYLE_TGL_PR);
 }
 
 
@@ -139,16 +139,19 @@ lvgl_bar_horizontal::lvgl_bar_horizontal(lv_obj_t *parent, ha_entity_sensor *ent
     lv_obj_set_size(cont, lv_obj_get_width_fit(parent), 75);
     lv_cont_set_layout(cont, LV_LAYOUT_ROW_M);
     lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
+
     label = lv_label_create(cont, nullptr);
     lv_label_set_text(label, txt);
     lv_label_set_recolor(label, true);
+
     bar = lv_bar_create(cont, nullptr);
+    lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
     lv_obj_set_size(bar, lv_obj_get_width_fit(cont) - 40, 30);
     lv_bar_set_anim_time(bar, 1000);
 }
 
 void lvgl_bar_horizontal::refresh() {
-    lv_bar_set_value(bar, (int16_t) entity_ptr->state, LV_ANIM_ON);
+    lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
 }
 
 lvgl_bar_vertical::lvgl_bar_vertical(lv_obj_t *parent, ha_entity_sensor *entity, const char *label_text) {
@@ -160,14 +163,15 @@ lvgl_bar_vertical::lvgl_bar_vertical(lv_obj_t *parent, ha_entity_sensor *entity,
     } else {
         txt = label_text;
     }
-    auto width = (lv_coord_t) ((static_cast<float>(lv_obj_get_width_fit(parent)) / 4) *
-                               0.5); // TODO: fix this to be more flexible
+
     cont = lv_cont_create(parent, nullptr);
     lv_cont_set_layout(cont, LV_LAYOUT_COL_M);
     lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
 
+    auto width = (lv_coord_t) (lv_obj_get_width_fit(cont)* 0.3); // TODO: fix this to be more flexible
+
     bar = lv_bar_create(cont, nullptr);
-    lv_bar_set_value(bar, (int16_t) entity_ptr->state, LV_ANIM_ON);
+    lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
     lv_obj_set_size(bar, width, 125);
     lv_obj_align(bar, nullptr, LV_ALIGN_CENTER, 0, 0);
     lv_bar_set_anim_time(bar, 1000);
@@ -180,7 +184,7 @@ lvgl_bar_vertical::lvgl_bar_vertical(lv_obj_t *parent, ha_entity_sensor *entity,
 }
 
 void lvgl_bar_vertical::refresh() {
-    lv_bar_set_value(bar, (int16_t) entity_ptr->state, LV_ANIM_ON);
+    lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
 }
 
 class IFactory {

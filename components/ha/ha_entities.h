@@ -23,10 +23,11 @@ public:
 
     virtual void features(void *feature_struct) {};
 
+    virtual int getState() {return 0;};
+
     char id[50] = "";
     char name[50] = "";
     ha_entity_type type = ha_entity_type::ha_none;
-    unsigned int state;
 
     std::vector<void *> callbacks;
 
@@ -34,6 +35,8 @@ public:
 };
 
 class ha_entity_switch : public ha_entity {
+private:
+    bool state;
 public:
     ha_entity_switch(const char *entity_id, const char *dname) : ha_entity(entity_id, dname) {}
 
@@ -42,6 +45,8 @@ public:
     void toggle();
 
     void update(JsonObjectConst &doc) override;
+
+    int getState();
 };
 
 /* ha_entity_light definitions and structures */
@@ -67,6 +72,8 @@ struct ha_light_features {
 };
 
 class ha_entity_light : public ha_entity {
+private:
+    bool state;
 public:
     ha_entity_light(const char *entity_id, const char *dname) : ha_entity(entity_id, dname) {}
 
@@ -79,6 +86,8 @@ public:
     void toggle();
 
     void features(void *feature_struct) override;
+
+    int getState();
 
     int brightness = 0;
     int color_temp = 0;
@@ -127,9 +136,13 @@ public:
 
     void update(JsonObjectConst &doc) override;
 
+    int getState();
+
 };
 
 class ha_entity_sensor : public ha_entity {
+
+    char state[20];
 
 public:
     ha_entity_type type = ha_entity_type::ha_sensor;
@@ -140,8 +153,15 @@ public:
 
     void update(JsonObjectConst &doc) override;
 
+    int getState();
 
+    float getStateAsFloat();
+
+    char * getStateAsString();
 };
+
+
+
 
 class EntityFactory {
 public:

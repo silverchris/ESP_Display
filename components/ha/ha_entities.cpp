@@ -28,7 +28,6 @@ ha_entity::ha_entity(const char *entity_id, const char *dname) {
     } else if (strncmp(entity_id, "sensor.", 7) == 0) {
         type = ha_entity_type::ha_sensor;
     }
-    state = 0;
 }
 
 void ha_entity::update(JsonObjectConst &doc) {
@@ -42,9 +41,17 @@ void ha_entity::update(JsonObjectConst &doc) {
 void ha_entity_switch::toggle() {
 }
 
+int ha_entity_switch::getState() {
+    return state;
+}
+
 void ha_entity_switch::update(JsonObjectConst &doc) {
     state = static_cast<uint8_t>(strncmp(doc["state"], "on", 2) == 0);
     ha_entity::update(doc);
+}
+
+int ha_entity_light::getState() {
+    return state;
 }
 
 void ha_entity_light::dim(uint8_t dim_value) {
@@ -81,7 +88,7 @@ void ha_entity_light::features(void *feature_struct_ptr) {
 
 
 void ha_entity_light::update(JsonObjectConst &doc) {
-    state = static_cast<uint8_t>(strncmp(doc["state"], "on", 2) == 0);
+    state = strncmp(doc["state"], "on", 2) == 0;
     brightness = doc["attributes"]["brightness"];
     color_temp = doc["attributes"]["color_temp"];
     min_mireds = doc["attributes"]["min_mireds"];
@@ -102,13 +109,33 @@ void ha_entity_weather::update(JsonObjectConst &doc) {
     ha_entity::update(doc);
 }
 
+int ha_entity_weather::getState() {
+    return (int) temperature;
+}
+
 void ha_entity_sensor::update(JsonObjectConst &doc) {
-    state = atoi((const char *) doc["state"]);
+    if (doc.containsKey("state")) {
+        strncpy(state, (const char *) doc["state"], sizeof(state));
+    }
+
     if (doc["attributes"].containsKey("unit_of_measurement")) {
         strncpy(unit_of_measurement, (const char *) doc["attributes"]["unit_of_measurement"],
                 sizeof(unit_of_measurement));
     }
     ha_entity::update(doc);
+}
+
+int ha_entity_sensor::getState() {
+    return strtol(state, nullptr, 10);
+}
+
+
+float ha_entity_sensor::getStateAsFloat(){
+    return 0.00;
+}
+
+char * ha_entity_sensor::getStateAsString(){
+    return nullptr;
 }
 
 class SwitchEntityFactory : public EntityFactory {
