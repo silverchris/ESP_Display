@@ -40,7 +40,7 @@ lvgl_light::lvgl_light(lv_obj_t *parent, ha_entity_light *entity, const char *la
     icon = lv_label_create(btn, nullptr);
     lv_label_set_text(icon, "#FFFFFF \xEF\x83\xAB#");
     lv_label_set_recolor(icon, true);
-    lv_label_set_style(icon, LV_LABEL_STYLE_MAIN, &style_symbol);
+//    lv_label_set_style(icon, LV_LABEL_STYLE_MAIN, &style_symbol);
     label = lv_label_create(btn, nullptr);
     lv_label_set_text(label, txt);
     lv_label_set_style(label, LV_LABEL_STYLE_MAIN, &style_label_small);
@@ -143,6 +143,7 @@ lvgl_bar_horizontal::lvgl_bar_horizontal(lv_obj_t *parent, ha_entity_sensor *ent
     label = lv_label_create(cont, nullptr);
     lv_label_set_text(label, txt);
     lv_label_set_recolor(label, true);
+    lv_label_set_style(label, LV_LABEL_STYLE_MAIN, &style_bar_label);
 
     bar = lv_bar_create(cont, nullptr);
     lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
@@ -178,7 +179,7 @@ lvgl_bar_vertical::lvgl_bar_vertical(lv_obj_t *parent, ha_entity_sensor *entity,
 
     label = lv_label_create(cont, nullptr);
     lv_label_set_text(label, txt);
-    lv_label_set_style(label, LV_LABEL_STYLE_MAIN, &style_symbol);
+    lv_label_set_style(label, LV_LABEL_STYLE_MAIN, &style_bar_label);
     lv_label_set_recolor(label, true);
     lv_cont_set_fit2(cont, LV_FIT_TIGHT, LV_FIT_TIGHT);
 }

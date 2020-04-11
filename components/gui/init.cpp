@@ -54,7 +54,7 @@ void load_gui_config(lv_obj_t *tv) {
 
             cont = lv_cont_create(tab, nullptr);
             lv_cont_set_layout(cont, LV_LAYOUT_PRETTY);
-            lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp_tight);
+            lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &style_row);
             lv_cont_set_fit2(cont, LV_FIT_FLOOD, LV_FIT_TIGHT);
 
             for (JsonObject item: row) {
@@ -169,10 +169,11 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
         lv_obj_set_size(tv, lv_obj_get_width_fit(scr), lv_obj_get_height_fit(scr));
         lv_tabview_set_sliding(tv, false);
         lv_tabview_set_anim_time(tv, 0);
-        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_REL, &style_tv_btn_rel);
-        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_PR, &style_tv_btn_pr);
-        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_TGL_REL, &style_tv_btn_rel);
-        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_TGL_PR, &style_tv_btn_pr);
+
+//        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_REL, &style_tv_btn_rel);
+//        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_PR, &style_tv_btn_pr);
+//        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_TGL_REL, &style_tv_btn_rel);
+//        lv_tabview_set_style(tv, LV_TABVIEW_STYLE_BTN_TGL_PR, &style_tv_btn_pr);
 
         auto *tv_ext = (lv_tabview_ext_t *)lv_obj_get_ext_attr(tv);
 
@@ -182,14 +183,6 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
 
         load_gui_config(tv);
 
-//        lv_obj_t *tab1 = lv_tabview_add_tab(tv, "\xEF\x80\x95");
-//        lv_obj_t *tab2 = lv_tabview_add_tab(tv, "\xEF\x83\xAB");
-//        lv_obj_t *tab3 = lv_tabview_add_tab(tv, "Status");
-//
-
-//
-//        main_tab(tab1);
-//        light_tab(tab2);
         xSemaphoreGive(xGuiSemaphore);
         esp_event_handler_register_with(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_UPDATE, event_ha_update, nullptr);
     }
@@ -231,7 +224,6 @@ void guiTask() {
     lv_indev_drv_register(&indev_drv);
 #endif
 
-    LV_FONT_DECLARE(Symbols);
     lv_theme_t *th = lv_theme_material_init(270, nullptr);
     lv_theme_set_current(th);
     style_setup();

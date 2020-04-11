@@ -19,12 +19,13 @@ void gui_init();
 //
 //void update_battery(int16_t battery);
 
-extern lv_style_t style_tv_btn_rel;
-extern lv_style_t style_tv_btn_pr;
-extern lv_style_t style_symbol;
+
+extern lv_style_t style_bar_label;
 extern lv_style_t style_temperature;
 extern lv_style_t style_label_small;
 extern lv_style_t style_preload;
+extern lv_style_t style_row;
+
 
 
 void style_setup(void);
