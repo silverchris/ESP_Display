@@ -3,12 +3,13 @@
 #include "driver/ledc.h"
 #include "esp_log.h"
 #include "esp_event.h"
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
 
 #include "backlight.h"
 #include "gui.h"
 
 // GPIO 21
-uint8_t backlight_state;
 uint8_t backlight_level;
 
 void backlight_set(uint8_t percent) {
@@ -18,6 +19,7 @@ void backlight_set(uint8_t percent) {
 
     ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, value);
     ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+    printf("Backlight finished\n");
 }
 
 void backlight_off() {
@@ -25,22 +27,14 @@ void backlight_off() {
     ledc_fade_start(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
 }
 
+esp_adc_cal_characteristics_t *adc_chars;
 
-void backlight_task(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
-    backlight_state = 1;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-    while (1) {
-        if (get_activity() > 60000) {
-            backlight_state = 0;
-            backlight_off();
-        } else if (backlight_state == 0) {
-            backlight_set(100);
-        }
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-#pragma clang diagnostic pop
+void adc_task(void *args){
+    int adc_value = adc1_get_raw(ADC1_GPIO36_CHANNEL);
+    int voltage = esp_adc_cal_raw_to_voltage(adc_value, adc_chars);
+    printf("Raw: %d\tVoltage: %dmV\n", adc_value, voltage);
 }
+
 
 void backlight_init(void) {
     gpio_set_direction((gpio_num_t) 21, GPIO_MODE_OUTPUT);
@@ -78,5 +72,32 @@ void backlight_init(void) {
 
     backlight_level = 100;
 
-    xTaskCreate((TaskFunction_t) backlight_task, "backlight_task", 1000, NULL, 0, NULL);
+    gpio_num_t adc_in = (gpio_num_t)36;
+
+    esp_err_t r;
+    r = adc1_pad_get_io_num(ADC1_GPIO36_CHANNEL, &adc_in);
+    assert(r == ESP_OK);
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(ADC1_GPIO36_CHANNEL, ADC_ATTEN_DB_11);
+    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, adc_chars);
+    if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
+        printf("Characterized using Two Point Value\n");
+    } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
+        printf("Characterized using eFuse Vref\n");
+    } else {
+        printf("Characterized using Default Vref\n");
+    }
+
+    const esp_timer_create_args_t adc_timer_args = {
+            .callback = &adc_task,
+            /* name is optional, but may help identify the timer when debugging */
+            .name = "adc_task"
+    };
+    esp_timer_handle_t adc_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&adc_timer_args, &adc_timer));
+    //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
+    ESP_ERROR_CHECK(esp_timer_start_periodic(adc_timer, 1000 * 1000)); //10ms (expressed as microseconds)
+
+
 }

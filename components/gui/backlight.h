@@ -6,7 +6,6 @@
 extern "C" {
 #endif
 
-extern uint8_t backlight_state;
 
 extern uint8_t backlight_level;
 
