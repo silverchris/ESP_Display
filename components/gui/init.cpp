@@ -92,21 +92,20 @@ void event_ha_update(void *handler_arg, esp_event_base_t base, int32_t id, void 
     }
 }
 
-void brightness_func(lv_obj_t *obj, lv_event_t event){
-    if(event == LV_EVENT_VALUE_CHANGED) {
-        uint8_t percent = lv_slider_get_value(obj);
+void brightness_func(lv_obj_t *obj, lv_event_t event) {
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        auto percent = (uint8_t) lv_slider_get_value(obj);
         backlight_set(percent);
     }
 }
 
-void config_window(void)
-{
+void config_window(void) {
 
-    lv_obj_t * win = lv_win_create(lv_scr_act(), nullptr);
+    lv_obj_t *win = lv_win_create(lv_scr_act(), nullptr);
     lv_win_set_title(win, "Settings");
 
 
-    lv_obj_t * close_btn = lv_win_add_btn(win, LV_SYMBOL_CLOSE);           /*Add close button and use built-in close action*/
+    lv_obj_t *close_btn = lv_win_add_btn(win, LV_SYMBOL_CLOSE);
     lv_obj_set_event_cb(close_btn, lv_win_close_event_cb);
 
     lv_obj_t *brightness_cont = lv_cont_create(win, nullptr);
