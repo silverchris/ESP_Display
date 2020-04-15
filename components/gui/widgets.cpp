@@ -27,15 +27,20 @@ lvgl_light::lvgl_light(lv_obj_t *parent, ha_entity_light *entity, const char *la
 
     auto width = (lv_coord_t) ((lv_obj_get_width_fit(parent) / 2) - 20);
 
-    btn = lv_btn_create(parent, nullptr);
+    lv_obj_t *cont = lv_cont_create(parent, nullptr);
+    lv_cont_set_layout(cont, LV_LAYOUT_COL_M);
+    lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
+
+    btn = lv_btn_create(cont, nullptr);
     lv_btn_set_toggle(btn, true);
     lvgl_callback callback_data{};
     callback_data.widget = (void *) this;
     lv_obj_set_user_data(btn, callback_data);
     lv_obj_set_event_cb(btn, callback_func);
 
-    lv_btn_set_fit2(btn, LV_FIT_NONE, LV_FIT_TIGHT);
-    lv_obj_set_width(btn, width);
+//    lv_btn_set_fit2(btn, LV_FIT_FILL, LV_FIT_FILL);
+    lv_obj_set_width(btn, lv_obj_get_width_fit(cont));
+    lv_obj_set_height(btn, lv_obj_get_height_fit(cont));
 
     icon = lv_label_create(btn, nullptr);
     lv_label_set_text(icon, "#FFFFFF \xEF\x83\xAB#");
