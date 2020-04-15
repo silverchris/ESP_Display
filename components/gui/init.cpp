@@ -23,10 +23,15 @@
 #include "ha_entities.h"
 #include "backlight.h"
 
+uint8_t backlight_state;
+
+
 void callback_func(lv_obj_t *obj, lv_event_t event) {
-    auto data = (lvgl_callback) lv_obj_get_user_data(obj);
-    if (data.widget != nullptr) {
-        ((widget_base *) data.widget)->callback(obj, event);
+    if (backlight_state) { // Disable button callbacks when backlight is off
+        auto data = (lvgl_callback) lv_obj_get_user_data(obj);
+        if (data.widget != nullptr) {
+            ((widget_base *) data.widget)->callback(obj, event);
+        }
     }
 }
 
@@ -184,6 +189,20 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
     }
 }
 
+static void backlight_task(void *args) {
+    if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
+        if (lv_disp_get_inactive_time(nullptr) > 60000) {
+            if (backlight_state == 1){
+                backlight_state = 0;
+                backlight_off();
+            }
+        } else if (backlight_state == 0) {
+            backlight_state = 1;
+            backlight_set(100);
+        }
+        xSemaphoreGive(xGuiSemaphore);
+    }
+}
 
 uint32_t get_activity() {
     uint32_t activity = 0;
@@ -241,22 +260,18 @@ void guiTask() {
     //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 10 * 1000)); //10ms (expressed as microseconds)
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-    while (true) {
-        vTaskDelay(1);
-        //Try to lock the semaphore, if success, call lvgl stuff
-        if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
-            lv_task_handler();
-            xSemaphoreGive(xGuiSemaphore);
-        }
-    }
-#pragma clang diagnostic pop
-}
+    backlight_state = 1;
 
-void gui_init() {
-    xTaskCreatePinnedToCore((TaskFunction_t) guiTask, "gui", 4096 * 2, nullptr, 0, nullptr, 1);
-    vTaskDelay(100);
+    const esp_timer_create_args_t backlight_timer_args = {
+            .callback = &backlight_task,
+            .name = "periodic_backlight"
+    };
+    esp_timer_handle_t backlight_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&backlight_timer_args, &backlight_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(backlight_timer, 100 * 1000)); //10ms (expressed as microseconds)
+
+//    xTaskCreatePinnedToCore((TaskFunction_t) guiTask, "gui", 4096 * 2, nullptr, 0, nullptr, 1);
+    vTaskDelay(100/portTICK_RATE_MS);
     esp_event_handler_register_with(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, event_ha_ready, nullptr);
 
 
