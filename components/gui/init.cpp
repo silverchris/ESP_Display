@@ -78,16 +78,6 @@ void load_gui_config(lv_obj_t *tv) {
 }
 
 
-static void IRAM_ATTR lv_tick_task(void *arg);
-
-void guiTask();
-
-static void IRAM_ATTR lv_tick_task(void *arg) {
-    (void) arg;
-
-    lv_tick_inc(portTICK_RATE_MS);
-}
-
 //Creates a semaphore to handle concurrent call to lvgl stuff
 //If you wish to call *any* lvgl function from other threads/tasks
 //you should lock on the very same semaphore!
@@ -204,26 +194,29 @@ static void backlight_task(void *args) {
     }
 }
 
-uint32_t get_activity() {
-    uint32_t activity = 0;
+void guiTask(void *args) {
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
-        activity = lv_disp_get_inactive_time(nullptr);
+        lv_task_handler();
         xSemaphoreGive(xGuiSemaphore);
     }
-    return activity;
 }
 
-void guiTask() {
+#define LVGL_BUFFER_SIZE CONFIG_LVGL_DISPLAY_WIDTH * 20
+
+lv_color_t *lvgl_buf1[LVGL_BUFFER_SIZE];
+lv_color_t *lvgl_buf2[LVGL_BUFFER_SIZE];
+
+void gui_init() {
     xGuiSemaphore = xSemaphoreCreateMutex();
 
     lv_init();
 
     lvgl_driver_init();
 
-    static auto buf1 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
-    static auto buf2 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
+//    static auto buf1 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
+//    static auto buf2 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
     static lv_disp_buf_t disp_buf;
-    lv_disp_buf_init(&disp_buf, buf1, buf2, 320 * 20);
+    lv_disp_buf_init(&disp_buf, lvgl_buf1, lvgl_buf2, LVGL_BUFFER_SIZE);
 
     lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
@@ -250,15 +243,16 @@ void guiTask() {
     lv_preload_set_style(preload, LV_PRELOAD_STYLE_MAIN, &style_preload);
 
 
-    const esp_timer_create_args_t periodic_timer_args = {
-            .callback = &lv_tick_task,
+    const esp_timer_create_args_t gui_timer_args = {
+            .callback = &guiTask,
             /* name is optional, but may help identify the timer when debugging */
-            .name = "periodic_gui"
+            .name = "guiTask"
     };
-    esp_timer_handle_t periodic_timer;
-    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+    esp_timer_handle_t gui_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&gui_timer_args, &gui_timer));
     //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
-    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 10 * 1000)); //10ms (expressed as microseconds)
+    ESP_ERROR_CHECK(esp_timer_start_periodic(gui_timer, 10 * 1000)); //10ms (expressed as microseconds)
+
 
     backlight_state = 1;
 
@@ -273,6 +267,4 @@ void guiTask() {
 //    xTaskCreatePinnedToCore((TaskFunction_t) guiTask, "gui", 4096 * 2, nullptr, 0, nullptr, 1);
     vTaskDelay(100/portTICK_RATE_MS);
     esp_event_handler_register_with(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, event_ha_ready, nullptr);
-
-
 }
