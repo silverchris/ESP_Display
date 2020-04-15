@@ -12,9 +12,9 @@
 
 ha_entity::ha_entity(const char *entity_id, const char *dname) {
     printf("Creating entity: %s\n", id);
-    strncpy(id, entity_id, sizeof(id));
+    strncpy(id, entity_id, sizeof(id)-1);
     if (dname != nullptr) {
-        strncpy(name, dname, sizeof(name));
+        strncpy(name, dname, sizeof(name)-1);
     }
 
     if (strncmp(entity_id, "light.", 5) == 0) {
@@ -104,7 +104,7 @@ void ha_entity_weather::update(JsonObjectConst &doc) {
     visibility = doc["attributes"]["visibility"];
     wind_speed = doc["attributes"]["wind_speed"];
     wind_bearing = doc["attributes"]["wind_bearing"];
-    strncpy(friendly_name, (const char *) doc["attributes"]["friendly_name"], sizeof(friendly_name));
+    strncpy(friendly_name, (const char *) doc["attributes"]["friendly_name"], sizeof(friendly_name)-1);
 
     ha_entity::update(doc);
 }
@@ -115,12 +115,12 @@ int ha_entity_weather::getState() {
 
 void ha_entity_sensor::update(JsonObjectConst &doc) {
     if (doc.containsKey("state")) {
-        strncpy(state, (const char *) doc["state"], sizeof(state));
+        strncpy(state, (const char *) doc["state"], sizeof(state)-1);
     }
 
     if (doc["attributes"].containsKey("unit_of_measurement")) {
         strncpy(unit_of_measurement, (const char *) doc["attributes"]["unit_of_measurement"],
-                sizeof(unit_of_measurement));
+                sizeof(unit_of_measurement)-1);
     }
     ha_entity::update(doc);
 }
@@ -172,7 +172,7 @@ ha_entity *new_entity(const char *entity_id, const char *dname) {
     entity_by_name["sensor"] = new SensorEntityFactory();
 
     char entity[20];
-    strncpy(entity, entity_id, 20);
+    strncpy(entity, entity_id, sizeof(entity)-1);
     strtok(entity, ".");
 
     if (entity_by_name.count(entity) > 0) {

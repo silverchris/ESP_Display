@@ -52,7 +52,7 @@ void callback_devices(const JsonDocument &json) {
         const char * name = v["name"];
         const char * id = v["id"];
         const char * area_id = v["area_id"];
-        add_device(id, area_id, name);
+        add_device(id, name, area_id);
     }
 }
 

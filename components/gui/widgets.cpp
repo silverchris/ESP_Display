@@ -136,7 +136,7 @@ lvgl_bar_horizontal::lvgl_bar_horizontal(lv_obj_t *parent, ha_entity_sensor *ent
         txt = label_text;
     }
     cont = lv_cont_create(parent, nullptr);
-    lv_obj_set_size(cont, lv_obj_get_width_fit(parent), 75);
+    lv_obj_set_size(cont, static_cast<lv_coord_t>(lv_obj_get_width_fit(parent) - 12), 75);
     lv_cont_set_layout(cont, LV_LAYOUT_ROW_M);
     lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
 
@@ -147,7 +147,7 @@ lvgl_bar_horizontal::lvgl_bar_horizontal(lv_obj_t *parent, ha_entity_sensor *ent
 
     bar = lv_bar_create(cont, nullptr);
     lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
-    lv_obj_set_size(bar, lv_obj_get_width_fit(cont) - 40, 30);
+    lv_obj_set_size(bar, lv_obj_get_width_fit(cont) - lv_obj_get_width(label), 25);
     lv_bar_set_anim_time(bar, 1000);
 }
 

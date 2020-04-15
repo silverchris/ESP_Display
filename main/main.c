@@ -1,3 +1,4 @@
+#include <limits.h>
 #include "freertos/FreeRTOS.h"
 
 #include "freertos/task.h"
@@ -14,7 +15,7 @@
 #include "ha_event.h"
 
 
-void app_main() {
+_Noreturn void app_main() {
     spiffs_init();
     wifi_init();
     httpd_init();
@@ -25,12 +26,9 @@ void app_main() {
 
     websocket_init();
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
         printf("Heap free %i\n", xPortGetFreeHeapSize());
         vTaskDelay(250);
     }
-#pragma clang diagnostic pop
 
 }

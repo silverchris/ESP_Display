@@ -22,7 +22,7 @@ static esp_err_t file_get_handler(httpd_req_t *req) {
     const char *resp_str = (const char *) req->user_ctx;
     char *buf = calloc(sizeof(char), MAXBUFLEN);
     char file[50] = "/spiffs/";
-    strcat(file, resp_str);
+    strncat(file, resp_str, sizeof(file)-strlen(file)-1);
     ESP_LOGI(TAG, "Serving %s", file);
     FILE *fp = fopen(file, "r");
     if (fp != NULL) {

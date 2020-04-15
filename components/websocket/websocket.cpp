@@ -116,7 +116,7 @@ bool CustomReader::empty() {
 }
 
 
-void json_task(void *pvParameters) {
+[[noreturn]] void json_task(void *pvParameters) {
     auto jsonstream = (CustomReader *) pvParameters;
 //    char *out = (char *)malloc(10000);
     DynamicJsonDocument doc_in(20000);
@@ -139,8 +139,6 @@ void json_task(void *pvParameters) {
 
     DeserializationError error;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (true) {
         if (!jsonstream->empty()) {
             error = deserializeJson(doc_in, *jsonstream, DeserializationOption::Filter(filter));
@@ -178,7 +176,6 @@ void json_task(void *pvParameters) {
             taskYIELD();
         }
     }
-#pragma clang diagnostic pop
 //    free(out);
 }
 

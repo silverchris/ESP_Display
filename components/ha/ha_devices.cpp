@@ -13,8 +13,8 @@
 
 
 ha_device::ha_device(const char *dname, const char* darea) {
-    strncpy(name, dname, 50);
-    strncpy(area, darea, 50);
+    strncpy(name, dname, sizeof(name)-1);
+    strncpy(area, darea, sizeof(area)-1);
 }
 
 void ha_device::add_entity(ha_entity *entity) {
