@@ -1,3 +1,4 @@
+#include <lvgl/src/lv_core/lv_style.h>
 #include "lvgl/lvgl.h"
 #include "gui.h"
 
@@ -8,7 +9,7 @@ lv_style_t style_bar_label;
 lv_style_t style_temperature;
 lv_style_t style_label_small;
 lv_style_t style_preload;
-lv_style_t  style_row;
+lv_style_t style_row;
 
 
 void style_setup(void) {
