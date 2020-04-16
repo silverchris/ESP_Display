@@ -3,9 +3,9 @@
 
 #ifdef __cplusplus
 
-#include <deque>
-
 #include <ArduinoJson.h>
+#include <freertos/ringbuf.h>
+
 
 void ws_queue_add(JsonDocument &doc, void (*f)(const JsonDocument &json));
 
@@ -13,36 +13,27 @@ void ws_queue_add(JsonDocument &doc);
 
 class CustomReader {
 private:
-    std::deque<int> buf;
-    SemaphoreHandle_t lock = xSemaphoreCreateMutex();
+    RingbufHandle_t buf;
+    uint8_t next = 0;
 
 public:
     int read();
 
     int peek();
 
-    void pop();
-
-    void fill(char *buffer, size_t length);
-
-    void putc(int character);
-
     bool empty();
+
+    explicit CustomReader(RingbufHandle_t buffer) {
+        buf = buffer;
+    }
 };
 
 
 extern "C" {
 #endif
 
-extern bool ha_ready;
 
 void websocket_init(void);
-//void websocket_task(void);
-
-
-//int websocket(void);
-//
-//void websocket_thread_func(void);
 
 #ifdef __cplusplus
 }
