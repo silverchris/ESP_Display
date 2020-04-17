@@ -10,6 +10,7 @@
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include <freertos/ringbuf.h>
 
 
 #include <ArduinoJson.h>
@@ -193,10 +194,67 @@ static void backlight_task(void *args) {
     }
 }
 
-void guiTask(void *args) {
-    if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
-        lv_task_handler();
-        xSemaphoreGive(xGuiSemaphore);
+RingbufHandle_t buffer;
+bool take_screenshot = false;
+lv_disp_t *display;
+
+static void screenshot_task(void *args) {
+    if (take_screenshot) {
+        if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
+            lv_obj_invalidate(lv_scr_act());
+            lv_refr_now(display);
+            take_screenshot = false;
+            xSemaphoreGive(xGuiSemaphore);
+        }
+    }
+}
+
+RingbufHandle_t screenshot_init() {
+    buffer = xRingbufferCreate((CONFIG_LVGL_DISPLAY_WIDTH * 20) * 2, RINGBUF_TYPE_BYTEBUF);
+    take_screenshot = true;
+    const esp_timer_create_args_t screenshot_timer_args = {
+            .callback = &screenshot_task,
+            .arg = nullptr,
+            .dispatch_method = ESP_TIMER_TASK,
+            .name = "screenshot_timer"
+    };
+    esp_timer_handle_t screenshot_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&screenshot_timer_args, &screenshot_timer));
+    ESP_ERROR_CHECK(esp_timer_start_once(screenshot_timer, 0)); //10ms (expressed as microseconds)
+    return buffer;
+}
+
+static uint32_t DISP_IMPL_lvgl_formatPixel(lv_color_t color) {
+    lv_color32_t ret;
+    LV_COLOR_SET_R32(ret, (LV_COLOR_GET_R(color) * 263 + 7) >> 5);
+    LV_COLOR_SET_G32(ret, (LV_COLOR_GET_G(color) * 259 + 3) >> 6);
+    LV_COLOR_SET_B32(ret, (LV_COLOR_GET_B(color) * 263 + 7) >> 5);
+    LV_COLOR_SET_A32(ret, 0xFF);
+
+    /* Make potential gray color true gray color */
+    if (color.ch.red == color.ch.blue) {
+        uint32_t dif = ret.ch.green - ret.ch.red;
+        if (dif <= 8) {
+            ret.ch.red += dif;
+            ret.ch.blue += dif;
+        }
+    }
+
+    return ret.full;
+}
+
+void screenshot_driver_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map) {
+    if (take_screenshot) {
+        printf("buffer free %i\n", xRingbufferGetCurFreeSize(buffer));
+        uint32_t size = lv_area_get_width(area) * lv_area_get_height(area);
+        uint32_t colour;
+        for (uint32_t i = 0; i < size; i++) {
+            colour = DISP_IMPL_lvgl_formatPixel(color_map[i]);
+            xRingbufferSend(buffer, &colour, sizeof(colour), 100);
+            lv_disp_flush_ready(drv);
+        }
+    } else {
+        disp_driver_flush(drv, area, color_map);
     }
 }
 
@@ -204,6 +262,13 @@ void guiTask(void *args) {
 
 lv_color_t *lvgl_buf1[LVGL_BUFFER_SIZE];
 lv_color_t *lvgl_buf2[LVGL_BUFFER_SIZE];
+
+void guiTask(void *args) {
+    if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
+        lv_task_handler();
+        xSemaphoreGive(xGuiSemaphore);
+    }
+}
 
 void gui_init() {
     xGuiSemaphore = xSemaphoreCreateMutex();
@@ -219,9 +284,9 @@ void gui_init() {
 
     lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    disp_drv.flush_cb = disp_driver_flush;
+    disp_drv.flush_cb = screenshot_driver_flush;
     disp_drv.buffer = &disp_buf;
-    lv_disp_drv_register(&disp_drv);
+    display = lv_disp_drv_register(&disp_drv);
 
 #if CONFIG_LVGL_TOUCH_CONTROLLER != TOUCH_CONTROLLER_NONE
     lv_indev_drv_t indev_drv;

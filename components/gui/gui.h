@@ -11,6 +11,9 @@ extern "C" {
 
 void gui_init();
 
+#include "freertos/FreeRTOS.h"
+#include <freertos/ringbuf.h>
+RingbufHandle_t screenshot_init();
 
 extern lv_style_t style_bar_label;
 extern lv_style_t style_temperature;
