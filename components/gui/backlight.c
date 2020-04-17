@@ -29,7 +29,7 @@ void backlight_off() {
 
 esp_adc_cal_characteristics_t *adc_chars;
 
-void adc_task(void *args){
+void adc_task(__unused void *args){
     int adc_value = adc1_get_raw(ADC1_GPIO36_CHANNEL);
     int voltage = esp_adc_cal_raw_to_voltage(adc_value, adc_chars);
     printf("Raw: %d\tVoltage: %dmV\n", adc_value, voltage);
@@ -99,5 +99,6 @@ void backlight_init(void) {
     //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
     ESP_ERROR_CHECK(esp_timer_start_periodic(adc_timer, 1000 * 1000)); //10ms (expressed as microseconds)
 
+    ESP_LOGI("BACKLIGHT", "BACKLIGHT_INIT FINISHED");
 
 }

@@ -112,4 +112,5 @@ void wifi_init() {
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
+    ESP_LOGI(TAG, "WIFI_INIT FINISHED");
 }

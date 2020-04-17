@@ -23,7 +23,7 @@ void ha_event_init(void) {
             .task_core_id = 0
     };
     esp_event_loop_create(&loop_args, &ha_event_loop_hdl);
-    ESP_LOGI(TAG, "HA Event init OK");
+    ESP_LOGI(TAG, "HA_EVENT_INIT FINISHED");
 }
 
 void ha_event_deinit() {

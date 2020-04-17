@@ -20,7 +20,6 @@ extern lv_style_t style_temperature;
 extern lv_style_t style_label_small;
 extern lv_style_t style_preload;
 extern lv_style_t style_row;
-extern lv_style_t style_guard;
 
 
 

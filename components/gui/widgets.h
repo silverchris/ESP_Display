@@ -25,7 +25,7 @@ public:
     uint32_t press_time;
     bool dim_direction; // false for down, true for up
 
-    void callback(lv_obj_t *obj, lv_event_t event) override;
+    void callback(__unused lv_obj_t *obj, lv_event_t event) override;
 
 
     void refresh() override;

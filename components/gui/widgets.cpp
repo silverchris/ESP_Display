@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <map>
 
+#include "freertos/FreeRTOS.h"
+
 #include "esp_timer.h"
 
 #include "lvgl/lvgl.h"
@@ -62,7 +64,7 @@ lvgl_light::lvgl_light(lv_obj_t *parent, ha_entity_light *entity, const char *la
 
 }
 
-void lvgl_light::callback(lv_obj_t *obj, lv_event_t event) {
+void lvgl_light::callback(__unused lv_obj_t *obj, lv_event_t event) {
     uint32_t press = (uint32_t) esp_timer_get_time() / 1000;
     if (event == LV_EVENT_SHORT_CLICKED) {
         if (lv_btn_get_state(btn) != LV_BTN_STATE_INA) {

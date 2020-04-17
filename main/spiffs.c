@@ -44,4 +44,5 @@ void spiffs_init() {
     } else {
         ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
     }
+    ESP_LOGI(TAG, "SPIFFS_INIT FINISHED");
 }

@@ -84,7 +84,7 @@ void load_gui_config(lv_obj_t *tv) {
 //you should lock on the very same semaphore!
 SemaphoreHandle_t xGuiSemaphore;
 
-void event_ha_update(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
+void event_ha_update(__unused void *handler_arg, __unused esp_event_base_t base, __unused int32_t id, void *event_data) {
     ha_event_data in = *((ha_event_data *) event_data);
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 100) == pdTRUE) {
         auto widget = (widget_base *) in.ptr;
@@ -153,7 +153,7 @@ static void tv_btnm_event_cb(lv_obj_t *tab_btnm, lv_event_t event) {
     if (res != LV_RES_OK) return;
 }
 
-void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
+void event_ha_ready(__unused void *handler_arg, esp_event_base_t base, int32_t id, void *event_data) {
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
         lv_obj_t *scr = lv_disp_get_scr_act(nullptr);
         lv_obj_clean(scr);
@@ -182,7 +182,7 @@ void event_ha_ready(void *handler_arg, esp_event_base_t base, int32_t id, void *
 static void backlight_task(void *args) {
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 10) == pdTRUE) {
         if (lv_disp_get_inactive_time(nullptr) > 60000) {
-            if (backlight_state == 1){
+            if (backlight_state == 1) {
                 backlight_state = 0;
                 backlight_off();
             }
@@ -277,8 +277,6 @@ void gui_init() {
 
     lvgl_driver_init();
 
-//    static auto buf1 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
-//    static auto buf2 = (lv_color_t *) malloc(sizeof(lv_color_t) * CONFIG_LVGL_DISPLAY_WIDTH * 20);
     static lv_disp_buf_t disp_buf;
     lv_disp_buf_init(&disp_buf, lvgl_buf1, lvgl_buf2, LVGL_BUFFER_SIZE);
 
@@ -288,13 +286,12 @@ void gui_init() {
     disp_drv.buffer = &disp_buf;
     display = lv_disp_drv_register(&disp_drv);
 
-#if CONFIG_LVGL_TOUCH_CONTROLLER != TOUCH_CONTROLLER_NONE
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
     indev_drv.read_cb = touch_driver_read;
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     lv_indev_drv_register(&indev_drv);
-#endif
+#
 
     lv_theme_t *th = lv_theme_material_init(270, nullptr);
     lv_theme_set_current(th);
@@ -309,19 +306,20 @@ void gui_init() {
 
     const esp_timer_create_args_t gui_timer_args = {
             .callback = &guiTask,
-            /* name is optional, but may help identify the timer when debugging */
+            .arg = nullptr,
+            .dispatch_method = ESP_TIMER_TASK,
             .name = "guiTask"
     };
     esp_timer_handle_t gui_timer;
     ESP_ERROR_CHECK(esp_timer_create(&gui_timer_args, &gui_timer));
-    //On ESP32 it's better to create a periodic task instead of esp_register_freertos_tick_hook
     ESP_ERROR_CHECK(esp_timer_start_periodic(gui_timer, 10 * 1000)); //10ms (expressed as microseconds)
-
 
     backlight_state = 1;
 
     const esp_timer_create_args_t backlight_timer_args = {
             .callback = &backlight_task,
+            .arg = nullptr,
+            .dispatch_method = ESP_TIMER_TASK,
             .name = "periodic_backlight"
     };
     esp_timer_handle_t backlight_timer;
@@ -329,6 +327,7 @@ void gui_init() {
     ESP_ERROR_CHECK(esp_timer_start_periodic(backlight_timer, 100 * 1000)); //10ms (expressed as microseconds)
 
 //    xTaskCreatePinnedToCore((TaskFunction_t) guiTask, "gui", 4096 * 2, nullptr, 0, nullptr, 1);
-    vTaskDelay(100/portTICK_RATE_MS);
+    vTaskDelay(100 / portTICK_RATE_MS);
     esp_event_handler_register_with(ha_event_loop_hdl, ESP_HA_EVENT, HA_EVENT_READY, event_ha_ready, nullptr);
+    ESP_LOGI("LVGL", "GUI_INIT FINISHED");
 }
