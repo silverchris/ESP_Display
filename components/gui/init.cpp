@@ -84,7 +84,8 @@ void load_gui_config(lv_obj_t *tv) {
 //you should lock on the very same semaphore!
 SemaphoreHandle_t xGuiSemaphore;
 
-void event_ha_update(__unused void *handler_arg, __unused esp_event_base_t base, __unused int32_t id, void *event_data) {
+void
+event_ha_update(__unused void *handler_arg, __unused esp_event_base_t base, __unused int32_t id, void *event_data) {
     ha_event_data in = *((ha_event_data *) event_data);
     if (xSemaphoreTake(xGuiSemaphore, (TickType_t) 100) == pdTRUE) {
         auto widget = (widget_base *) in.ptr;

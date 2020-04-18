@@ -134,9 +134,9 @@ lvgl_temperature::lvgl_temperature(lv_obj_t *parent, ha_entity_weather *entity, 
     unit = lv_label_create(sub_cont, nullptr);
     lv_label_set_text(unit, "°C");
     lv_label_set_style(unit, LV_LABEL_STYLE_MAIN, &style_unit);
-    lv_obj_align(unit, temp, LV_ALIGN_OUT_RIGHT_TOP, 0 ,0);
+    lv_obj_align(unit, temp, LV_ALIGN_OUT_RIGHT_TOP, 0, 0);
 
-    lv_obj_align(sub_cont, label, LV_ALIGN_OUT_BOTTOM_MID, 0 ,0);
+    lv_obj_align(sub_cont, label, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 
 
 }
@@ -166,12 +166,12 @@ lvgl_percent::lvgl_percent(lv_obj_t *parent, ha_entity_sensor *entity, const cha
     data = lv_label_create(sub_cont, nullptr);
     lv_label_set_text(data, entity_ptr->getStateAsString());
     lv_label_set_style(data, LV_LABEL_STYLE_MAIN, &style_temperature);
-    lv_obj_align(data, label, LV_ALIGN_OUT_BOTTOM_MID, 0 , 0);
+    lv_obj_align(data, label, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
     unit = lv_label_create(sub_cont, nullptr);
     lv_label_set_text(unit, entity_ptr->unit_of_measurement);
     lv_label_set_style(unit, LV_LABEL_STYLE_MAIN, &style_unit);
 
-    lv_obj_align(unit, data, LV_ALIGN_OUT_RIGHT_TOP, 0 , 0);
+    lv_obj_align(unit, data, LV_ALIGN_OUT_RIGHT_TOP, 0, 0);
 
 
 }
@@ -223,7 +223,7 @@ lvgl_bar_vertical::lvgl_bar_vertical(lv_obj_t *parent, ha_entity_sensor *entity,
     lv_cont_set_layout(cont, LV_LAYOUT_COL_M);
     lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
 
-    auto width = (lv_coord_t) (lv_obj_get_width_fit(cont)* 0.3); // TODO: fix this to be more flexible
+    auto width = (lv_coord_t) (lv_obj_get_width_fit(cont) * 0.3); // TODO: fix this to be more flexible
 
     bar = lv_bar_create(cont, nullptr);
     lv_bar_set_value(bar, (int16_t) entity_ptr->getState(), LV_ANIM_ON);
@@ -264,7 +264,7 @@ class TemperatureFactory : public IFactory {
 
 class PercentFactory : public IFactory {
     lvgl_percent *create(lv_obj_t *parent, ha_entity *entity, const char *label_text,
-                             lv_event_cb_t callback_func) override {
+                         lv_event_cb_t callback_func) override {
         return new lvgl_percent(parent, (ha_entity_sensor *) entity, label_text);
     }
 };

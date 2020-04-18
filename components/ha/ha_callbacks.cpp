@@ -43,7 +43,7 @@ void callback_state(const JsonDocument &json) {
 
 void callback_entities(const JsonDocument &json) {
     for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-        if(v.containsKey("entity_id")) {
+        if (v.containsKey("entity_id")) {
             add_entity((const char *) v["entity_id"]);
         }
     }
@@ -55,22 +55,20 @@ void callback_entities(const JsonDocument &json) {
 
 void callback_devices(const JsonDocument &json) {
     for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-        const char * name = v["name"];
-        const char * id = v["id"];
-        const char * area_id = v["area_id"];
+        const char *name = v["name"];
+        const char *id = v["id"];
+        const char *area_id = v["area_id"];
         add_device(id, name, area_id);
     }
 }
 
 //void callback_area(const JsonDocument &json) {
 //    for (JsonObjectConst v : json["result"].as<JsonArrayConst>()) {
-//        std::string name = v["name"];
-//        std::string id = v["area_id"];
+//        const char * name = v["name"];
+//        const char * id = v["area_id"];
 //        create_area((char *) id.c_str(), (char *) name.c_str());
 //        printf("Area: %s\n", name.c_str());
 //    }
-//    doc_out["type"] = "config/device_registry/list";
-//    ws_queue_add(doc_out, callback_devices);
 //}
 
 

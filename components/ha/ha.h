@@ -28,7 +28,7 @@ void add_device(const char *id, const char *name, const char *area);
 
 ha_device *get_device(const char *device_id);
 
-void device_entity_assoc(const char * deviceid, const char *entityid);
+void device_entity_assoc(const char *deviceid, const char *entityid);
 
 //void create_area(char *id, char *name);
 //

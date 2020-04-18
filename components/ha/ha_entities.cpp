@@ -15,10 +15,9 @@
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define TAG "HA_ENTITY"
 
-esp_err_t _http_event_handler(esp_http_client_event_t *evt)
-{
+esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     static int output_len;       // Stores number of bytes read
-    switch(evt->event_id) {
+    switch (evt->event_id) {
         case HTTP_EVENT_ERROR:
             ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
             break;
@@ -40,7 +39,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             if (!esp_http_client_is_chunked_response(evt->client)) {
                 // If user_data buffer is configured, copy the response into the buffer
                 if (evt->user_data) {
-                    memcpy((char *)evt->user_data + output_len, evt->data, evt->data_len);
+                    memcpy((char *) evt->user_data + output_len, evt->data, evt->data_len);
                 }
                 output_len += evt->data_len;
             }
@@ -58,9 +57,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 }
 
 
-int get_state(const char *entity, char* out){
+int get_state(const char *entity, char *out) {
     char url[100] = "http://" CONFIG_HA_ADDRESS ":8123/api/states/";
-    strncat(url, entity, sizeof(url)-strlen(url)-1);
+    strncat(url, entity, sizeof(url) - strlen(url) - 1);
     printf("url %s\n", url);
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     esp_http_client_config_t config = {
@@ -88,17 +87,16 @@ int get_state(const char *entity, char* out){
     }
     esp_http_client_close(client);
     esp_http_client_cleanup(client);
-    if(err == ESP_OK){
+    if (err == ESP_OK) {
         return status;
     }
     return err;
 }
 
 ha_entity::ha_entity(const char *entity_id, const char *dname) {
-    printf("Creating entity: %s\n", id);
-    strncpy(id, entity_id, sizeof(id)-1);
+    strncpy(id, entity_id, sizeof(id) - 1);
     if (dname != nullptr) {
-        strncpy(name, dname, sizeof(name)-1);
+        strncpy(name, dname, sizeof(name) - 1);
     }
 
     if (strncmp(entity_id, "light.", 5) == 0) {
@@ -112,6 +110,7 @@ ha_entity::ha_entity(const char *entity_id, const char *dname) {
     } else if (strncmp(entity_id, "sensor.", 7) == 0) {
         type = ha_entity_type::ha_sensor;
     }
+
 }
 
 void ha_entity::update(JsonObjectConst &doc) {
@@ -188,7 +187,7 @@ void ha_entity_weather::update(JsonObjectConst &doc) {
     visibility = doc["attributes"]["visibility"];
     wind_speed = doc["attributes"]["wind_speed"];
     wind_bearing = doc["attributes"]["wind_bearing"];
-    strncpy(friendly_name, (const char *) doc["attributes"]["friendly_name"], sizeof(friendly_name)-1);
+    strncpy(friendly_name, (const char *) doc["attributes"]["friendly_name"], sizeof(friendly_name) - 1);
 
     ha_entity::update(doc);
 }
@@ -199,12 +198,12 @@ int ha_entity_weather::getState() {
 
 void ha_entity_sensor::update(JsonObjectConst &doc) {
     if (doc.containsKey("state")) {
-        strncpy(state, (const char *) doc["state"], sizeof(state)-1);
+        strncpy(state, (const char *) doc["state"], sizeof(state) - 1);
     }
 
     if (doc["attributes"].containsKey("unit_of_measurement")) {
         strncpy(unit_of_measurement, (const char *) doc["attributes"]["unit_of_measurement"],
-                sizeof(unit_of_measurement)-1);
+                sizeof(unit_of_measurement) - 1);
     }
     ha_entity::update(doc);
 }
@@ -214,12 +213,12 @@ int ha_entity_sensor::getState() {
 }
 
 
-float ha_entity_sensor::getStateAsFloat(){
+float ha_entity_sensor::getStateAsFloat() {
     return 0.00;
 }
 
-char * ha_entity_sensor::getStateAsString(){
-    return nullptr;
+char *ha_entity_sensor::getStateAsString() {
+    return state;
 }
 
 class SwitchEntityFactory : public EntityFactory {
@@ -256,14 +255,14 @@ ha_entity *new_entity(const char *entity_id, const char *dname) {
     entity_by_name["sensor"] = new SensorEntityFactory();
 
     char entity[20];
-    strncpy(entity, entity_id, sizeof(entity)-1);
+    strncpy(entity, entity_id, sizeof(entity) - 1);
     strtok(entity, ".");
 
     if (entity_by_name.count(entity) > 0) {
         EntityFactory *factory = entity_by_name[entity];
         ha_entity *e = factory->create(entity_id, dname);
 
-        char *buf = (char *)calloc(sizeof(char), MAX_HTTP_OUTPUT_BUFFER);
+        char *buf = (char *) calloc(sizeof(char), MAX_HTTP_OUTPUT_BUFFER);
         get_state(entity_id, buf);
         DynamicJsonDocument doc(3000);
         DeserializationError error = deserializeJson(doc, buf);

@@ -28,7 +28,7 @@ ha_entity *add_entity(const char *entity_id) {
     char name[] = "null";
     size_t id_len = 50;
     char *id = (char *) calloc(sizeof(char), id_len);
-    strncpy(id, entity_id, id_len-1);
+    strncpy(id, entity_id, id_len - 1);
 
     entity = new_entity(id, name);
     if (entity != nullptr) {
@@ -52,7 +52,7 @@ ha_entity *get_entity(const char *entity_id) {
         return entity;
     } else {
         char buf[2048];
-        if(get_state(entity_id, buf) == 200){
+        if (get_state(entity_id, buf) == 200) {
             return add_entity(entity_id);
         }
     }
@@ -69,7 +69,7 @@ void add_device(const char *id, const char *name, const char *area) {
 }
 
 
-ha_device *get_device(const char *device_id){
+ha_device *get_device(const char *device_id) {
     if (ha_devices.count(device_id)) {
         ha_device *device = nullptr;
         device = ha_devices[device_id];
@@ -78,8 +78,8 @@ ha_device *get_device(const char *device_id){
     return nullptr;
 }
 
-void device_entity_assoc(const char * deviceid, const char *entityid){
-    if(ha_entities.count(entityid) > 0 && ha_devices.count(deviceid)){
+void device_entity_assoc(const char *deviceid, const char *entityid) {
+    if (ha_entities.count(entityid) > 0 && ha_devices.count(deviceid)) {
         ha_devices[deviceid]->add_entity(ha_entities[entityid]);
     }
 }

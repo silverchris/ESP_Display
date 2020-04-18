@@ -55,7 +55,7 @@ void style_setup(void) {
 //    style_text_display.body.border.width = 1;
 //    style_text_display.body.border.part = LV_BORDER_FULL;
 
-    lv_style_copy(&style_unit,  &lv_style_plain);
+    lv_style_copy(&style_unit, &lv_style_plain);
     style_unit.text.font = &font_12;
 }
 

@@ -12,9 +12,9 @@
 #include "ha_devices.h"
 
 
-ha_device::ha_device(const char *dname, const char* darea) {
-    strncpy(name, dname, sizeof(name)-1);
-    strncpy(area, darea, sizeof(area)-1);
+ha_device::ha_device(const char *dname, const char *darea) {
+    strncpy(name, dname, sizeof(name) - 1);
+    strncpy(area, darea, sizeof(area) - 1);
 }
 
 void ha_device::add_entity(ha_entity *entity) {
@@ -22,8 +22,7 @@ void ha_device::add_entity(ha_entity *entity) {
 }
 
 
-
-ha_device *new_device(const char *name, const char *area){
+ha_device *new_device(const char *name, const char *area) {
     auto *new_device = new ha_device(name, area);
     return new_device;
 }

@@ -4,7 +4,7 @@
 #include <vector>
 #include <ArduinoJson.h>
 
-int get_state(const char *entity, char* out);
+int get_state(const char *entity, char *out);
 
 enum class ha_entity_type {
     ha_none = 0,
@@ -25,7 +25,7 @@ public:
 
     virtual void features(void *feature_struct) {};
 
-    virtual int getState() {return 0;};
+    virtual int getState() { return 0; };
 
     char id[50] = "";
     char name[50] = "";
@@ -159,10 +159,8 @@ public:
 
     float getStateAsFloat();
 
-    char * getStateAsString();
+    char *getStateAsString();
 };
-
-
 
 
 class EntityFactory {

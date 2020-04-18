@@ -122,30 +122,33 @@ void login() {
     DeserializationError error;
 
     while (true) {
-        if (!json_stream->empty())
+        if (!json_stream->empty()) {
             error = deserializeJson(doc_in, *json_stream, DeserializationOption::Filter(filter));
+        }
         if (json_stream->peek() == 29) {
             if (error) {
                 printf("deserializeJson() failed: %s\n", error.c_str());
                 doc_in.clear();
             } else {
-//                serializeJsonPretty(doc_in, out, 10000);
-//                printf("json out: %s\n", out);
-                const char *type = doc_in["type"];
+                serializeJsonPretty(doc_in, out, 10000);
+                printf("json out: %s\n", out);
+                if (doc_in.containsKey("type")) {
+                    const char *type = doc_in["type"];
 //                printf("type: %s\n", type);
-                if (strcmp(type, "auth_ok") == 0) {
-                    callback_auth();
-                } else if (strcmp(type, "auth_required") == 0) {
-                    login();
-                } else if (strcmp(type, "event") == 0) {
-                    callback_state_events(doc_in);
-                    printf("done event callback\n");
-                } else if (strcmp(type, "result") == 0) {
-                    uint16_t id = doc_in["id"];
-                    if (CallbackMap.count(id) > 0) {
-                        CallbackMap[id](doc_in);
-                        CallbackMap.erase(id);
-                        printf("done callback\n");
+                    if (strcmp(type, "auth_ok") == 0) {
+                        callback_auth();
+                    } else if (strcmp(type, "auth_required") == 0) {
+                        login();
+                    } else if (strcmp(type, "event") == 0) {
+                        callback_state_events(doc_in);
+                        printf("done event callback\n");
+                    } else if (strcmp(type, "result") == 0) {
+                        uint16_t id = doc_in["id"];
+                        if (CallbackMap.count(id) > 0) {
+                            CallbackMap[id](doc_in);
+                            CallbackMap.erase(id);
+                            printf("done callback\n");
+                        }
                     }
                 }
                 doc_in.clear();
@@ -161,7 +164,8 @@ void login() {
 }
 
 
-static void websocket_event_handler(void *handler_args, __unused esp_event_base_t base, int32_t event_id, void *event_data) {
+static void
+websocket_event_handler(void *handler_args, __unused esp_event_base_t base, int32_t event_id, void *event_data) {
     auto *data = (esp_websocket_event_data_t *) event_data;
     auto buf = (RingbufHandle_t) handler_args;
 

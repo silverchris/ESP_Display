@@ -3,7 +3,7 @@
 
 class ha_device {
 public:
-    explicit ha_device(const char *dname, const char* darea);
+    explicit ha_device(const char *dname, const char *darea);
 
     void add_entity(ha_entity *entity);
 
