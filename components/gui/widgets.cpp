@@ -11,7 +11,7 @@
 
 #include "gui.h"
 
-#include "ha.hpp"
+#include "ha.h"
 
 
 #include "widgets.h"
@@ -115,15 +115,30 @@ lvgl_temperature::lvgl_temperature(lv_obj_t *parent, ha_entity_weather *entity, 
     entity->callbacks.push_back(this);
 
     cont = lv_cont_create(parent, nullptr);
-    lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &lv_style_transp);
-    lv_cont_set_layout(cont, LV_LAYOUT_COL_M);
+    lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &style_text_display);
+    lv_cont_set_fit2(cont, LV_FIT_TIGHT, LV_FIT_TIGHT);
+
+//    lv_cont_set_layout(cont, LV_LAYOUT_COL_M);
     label = lv_label_create(cont, nullptr);
     lv_label_set_text(label, entity->friendly_name);
-    temp = lv_label_create(cont, nullptr);
+
+    lv_obj_t *sub_cont = lv_cont_create(cont, nullptr);
+    lv_cont_set_style(sub_cont, LV_CONT_STYLE_MAIN, &style_text_display);
+    lv_cont_set_fit2(sub_cont, LV_FIT_TIGHT, LV_FIT_TIGHT);
+
+    temp = lv_label_create(sub_cont, nullptr);
     char temperature[4];
     sprintf(temperature, "%2.1f", entity->temperature);
     lv_label_set_text(temp, temperature);
     lv_label_set_style(temp, LV_LABEL_STYLE_MAIN, &style_temperature);
+    unit = lv_label_create(sub_cont, nullptr);
+    lv_label_set_text(unit, "°C");
+    lv_label_set_style(unit, LV_LABEL_STYLE_MAIN, &style_unit);
+    lv_obj_align(unit, temp, LV_ALIGN_OUT_RIGHT_TOP, 0 ,0);
+
+    lv_obj_align(sub_cont, label, LV_ALIGN_OUT_BOTTOM_MID, 0 ,0);
+
+
 }
 
 void lvgl_temperature::refresh() {
@@ -131,6 +146,38 @@ void lvgl_temperature::refresh() {
     char temperature[4];
     sprintf(temperature, "%2.1f", entity_ptr->temperature);
     lv_label_set_text(temp, temperature);
+}
+
+lvgl_percent::lvgl_percent(lv_obj_t *parent, ha_entity_sensor *entity, const char *label_text) {
+    entity_ptr = entity;
+    entity->callbacks.push_back(this);
+
+    cont = lv_cont_create(parent, nullptr);
+    lv_cont_set_style(cont, LV_CONT_STYLE_MAIN, &style_text_display);
+    lv_cont_set_fit2(cont, LV_FIT_TIGHT, LV_FIT_TIGHT);
+
+    label = lv_label_create(cont, nullptr);
+    lv_label_set_text(label, label_text);
+
+    lv_obj_t *sub_cont = lv_cont_create(cont, nullptr);
+    lv_cont_set_style(sub_cont, LV_CONT_STYLE_MAIN, &style_text_display);
+    lv_cont_set_fit2(sub_cont, LV_FIT_TIGHT, LV_FIT_TIGHT);
+
+    data = lv_label_create(sub_cont, nullptr);
+    lv_label_set_text(data, entity_ptr->getStateAsString());
+    lv_label_set_style(data, LV_LABEL_STYLE_MAIN, &style_temperature);
+    lv_obj_align(data, label, LV_ALIGN_OUT_BOTTOM_MID, 0 , 0);
+    unit = lv_label_create(sub_cont, nullptr);
+    lv_label_set_text(unit, entity_ptr->unit_of_measurement);
+    lv_label_set_style(unit, LV_LABEL_STYLE_MAIN, &style_unit);
+
+    lv_obj_align(unit, data, LV_ALIGN_OUT_RIGHT_TOP, 0 , 0);
+
+
+}
+
+void lvgl_percent::refresh() {
+    lv_label_set_text(data, entity_ptr->getStateAsString());
 }
 
 lvgl_bar_horizontal::lvgl_bar_horizontal(lv_obj_t *parent, ha_entity_sensor *entity, const char *label_text) {
@@ -215,6 +262,13 @@ class TemperatureFactory : public IFactory {
     }
 };
 
+class PercentFactory : public IFactory {
+    lvgl_percent *create(lv_obj_t *parent, ha_entity *entity, const char *label_text,
+                             lv_event_cb_t callback_func) override {
+        return new lvgl_percent(parent, (ha_entity_sensor *) entity, label_text);
+    }
+};
+
 class BarHorizontalFactory : public IFactory {
     lvgl_bar_horizontal *create(lv_obj_t *parent, ha_entity *entity, const char *label_text,
                                 lv_event_cb_t callback_func) override {
@@ -236,6 +290,7 @@ widget_base *get_widget_by_type(const char *widget_name, lv_obj_t *parent, ha_en
     WidgetsByName widgets_by_name;
     widgets_by_name["light"] = new LightFactory();
     widgets_by_name["temperature"] = new TemperatureFactory();
+    widgets_by_name["percent"] = new PercentFactory();
     widgets_by_name["bar_horizontal"] = new BarHorizontalFactory();
     widgets_by_name["bar_vertical"] = new BarVerticalFactory();
 

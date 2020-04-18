@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 
-#include "ha.hpp"
+#include "ha.h"
 #include "ha_entities.h"
 
 class widget_base {
@@ -37,9 +37,24 @@ protected:
     lv_obj_t *label;
     lv_obj_t *temp;
     ha_entity_weather *entity_ptr;
+    lv_obj_t *unit;
 
 public:
     lvgl_temperature(lv_obj_t *parent, ha_entity_weather *entity, const char *label_text);
+
+    void refresh() override;
+};
+
+class lvgl_percent : public widget_base {
+protected:
+    lv_obj_t *cont;
+    lv_obj_t *label;
+    lv_obj_t *data;
+    ha_entity_sensor *entity_ptr;
+    lv_obj_t *unit;
+
+public:
+    lvgl_percent(lv_obj_t *parent, ha_entity_sensor *entity, const char *label_text);
 
     void refresh() override;
 };

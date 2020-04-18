@@ -10,6 +10,8 @@ lv_style_t style_temperature;
 lv_style_t style_label_small;
 lv_style_t style_preload;
 lv_style_t style_row;
+lv_style_t style_unit;
+lv_style_t style_text_display;
 
 
 void style_setup(void) {
@@ -44,5 +46,16 @@ void style_setup(void) {
     lv_style_copy(&style_row, &lv_style_transp_tight);
     style_row.body.padding.left = 25;
     style_row.body.padding.right = 25;
+//    style_row.body.border.width = 1;
+//    style_row.body.border.part = LV_BORDER_FULL;
+
+    lv_style_copy(&style_text_display, &lv_style_transp);
+//    style_row.body.padding.left = 25;
+//    style_row.body.padding.right = 25;
+//    style_text_display.body.border.width = 1;
+//    style_text_display.body.border.part = LV_BORDER_FULL;
+
+    lv_style_copy(&style_unit,  &lv_style_plain);
+    style_unit.text.font = &font_12;
 }
 
