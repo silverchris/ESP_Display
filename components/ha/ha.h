@@ -16,7 +16,7 @@ public:
 };
 
 
-void add_entity(const char *id, const char *entity_id);
+ha_entity *add_entity(const char *entity_id);
 
 void update_entity(const char *entity_id, JsonObjectConst &doc);
 

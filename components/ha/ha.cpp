@@ -17,14 +17,21 @@ std::map<const char *, ha_device *, StrCompare> ha_devices;
 std::map<const char *, ha_entity *, StrCompare> ha_entities;
 
 
-void add_entity(const char *id, const char *entity_id) {
+ha_entity *add_entity(const char *entity_id) {
     ha_entity *entity = nullptr;
 
     char name[] = "null";
-    entity = new_entity(entity_id, name);
+    size_t id_len = 50;
+    char *id = (char *) calloc(sizeof(char), id_len);
+    strncpy(id, entity_id, id_len-1);
+
+    entity = new_entity(id, name);
     if (entity != nullptr) {
-        ha_entities.emplace(entity_id, entity);
+        ha_entities.emplace(id, entity);
+    } else {
+        free(id);
     }
+    return entity;
 }
 
 void update_entity(const char *entity_id, JsonObjectConst &doc) {
