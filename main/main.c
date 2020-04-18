@@ -26,6 +26,7 @@ _Noreturn void app_main() {
     backlight_init();
 
     websocket_init();
+    ha_init();
 
     while (1) {
         printf("Heap free %i\n", xPortGetFreeHeapSize());

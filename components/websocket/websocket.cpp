@@ -100,8 +100,8 @@ void login() {
 
 [[noreturn]] void json_task(void *pvParameters) {
     auto json_stream = (CustomReader *) pvParameters;
-//    char *out = (char *)malloc(10000);
-    DynamicJsonDocument doc_in(20000);
+    char *out = (char *) malloc(10000);
+    DynamicJsonDocument doc_in(10000);
     DynamicJsonDocument filter(1000);
     filter["type"] = true;
     filter["id"] = true;

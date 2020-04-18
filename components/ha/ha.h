@@ -1,6 +1,8 @@
 #ifndef HA_H
 #define HA_H
 
+#ifdef __cplusplus
+
 #include <cstring>
 #include <vector>
 #include <functional>
@@ -38,4 +40,22 @@ void device_entity_assoc(const char * deviceid, const char *entityid);
 //
 //void print_entities();
 
+extern "C" {
+#endif
+
+enum {
+    ha_state_auth,
+    ha_state_entities,
+    ha_state_subscribe,
+    ha_state_devices,
+    ha_state_areas,
+    ha_state_finished
+};
+
+void ha_state_set(int new_state);
+void ha_init();
+
+#ifdef __cplusplus
+}
+#endif
 #endif //HA_H
