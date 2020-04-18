@@ -13,6 +13,7 @@
 #include "gui.h"
 #include "websocket.h"
 #include "ha_event.h"
+#include "ha.h"
 
 
 _Noreturn void app_main() {

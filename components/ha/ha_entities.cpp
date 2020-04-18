@@ -4,7 +4,7 @@
 
 #include <ArduinoJson.h>
 
-#include "ha.hpp"
+#include "ha.h"
 #include "ha_event.h"
 #include "websocket.h"
 

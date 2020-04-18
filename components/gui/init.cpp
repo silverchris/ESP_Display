@@ -19,7 +19,7 @@
 #include "lvgl_driver.h"
 #include "gui.h"
 #include "widgets.h"
-#include "ha.hpp"
+#include "ha.h"
 #include "ha_event.h"
 #include "ha_entities.h"
 #include "backlight.h"

@@ -5,7 +5,7 @@
 
 #ifdef __cplusplus
 
-#include "ha.hpp"
+#include "ha.h"
 extern "C" {
 #endif
 

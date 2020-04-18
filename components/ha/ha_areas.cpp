@@ -7,7 +7,7 @@
 #include <ArduinoJson.h>
 
 
-#include "ha.hpp"
+#include "ha.h"
 #include "ha_entities.h"
 #include "ha_devices.h"
 #include "ha_areas.h"

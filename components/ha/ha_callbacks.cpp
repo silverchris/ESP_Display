@@ -5,7 +5,7 @@
 #include "ha_event.h"
 #include "websocket.h"
 
-#include "ha.hpp"
+#include "ha.h"
 #include "ha_entities.h"
 #include "ha_devices.h"
 
