@@ -4,6 +4,8 @@
 #include <vector>
 #include <ArduinoJson.h>
 
+int get_state(const char *entity, char* out);
+
 enum class ha_entity_type {
     ha_none = 0,
     ha_light = 1,

@@ -46,6 +46,11 @@ ha_entity *get_entity(const char *entity_id) {
         ha_entity *entity = nullptr;
         entity = ha_entities[entity_id];
         return entity;
+    } else {
+        char buf[2048];
+        if(get_state(entity_id, buf) == 200){
+            return add_entity(entity_id);
+        }
     }
     return nullptr;
 }

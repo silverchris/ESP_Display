@@ -2,6 +2,8 @@
 #include <cstring>
 #include <cstdio>
 
+#include "esp_http_client.h"
+
 #include <ArduinoJson.h>
 
 #include "ha.h"
@@ -9,6 +11,88 @@
 #include "websocket.h"
 
 #include "ha_entities.h"
+
+#define MAX_HTTP_OUTPUT_BUFFER 2048
+#define TAG "HA_ENTITY"
+
+esp_err_t _http_event_handler(esp_http_client_event_t *evt)
+{
+    static int output_len;       // Stores number of bytes read
+    switch(evt->event_id) {
+        case HTTP_EVENT_ERROR:
+            ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+            break;
+        case HTTP_EVENT_ON_CONNECTED:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+            break;
+        case HTTP_EVENT_HEADER_SENT:
+            ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+            break;
+        case HTTP_EVENT_ON_HEADER:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+            break;
+        case HTTP_EVENT_ON_DATA:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+            /*
+             *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
+             *  However, event handler can also be used in case chunked encoding is used.
+             */
+            if (!esp_http_client_is_chunked_response(evt->client)) {
+                // If user_data buffer is configured, copy the response into the buffer
+                if (evt->user_data) {
+                    memcpy((char *)evt->user_data + output_len, evt->data, evt->data_len);
+                }
+                output_len += evt->data_len;
+            }
+
+            break;
+        case HTTP_EVENT_ON_FINISH:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
+            output_len = 0;
+            break;
+        case HTTP_EVENT_DISCONNECTED:
+            ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
+            break;
+    }
+    return ESP_OK;
+}
+
+
+int get_state(const char *entity, char* out){
+    char url[100] = "http://" CONFIG_HA_ADDRESS ":8123/api/states/";
+    strncat(url, entity, sizeof(url)-strlen(url)-1);
+    printf("url %s\n", url);
+    char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
+    esp_http_client_config_t config = {
+            .url = url,
+            .port = 8123,
+            .event_handler = _http_event_handler,
+            .user_data = local_response_buffer,        // Pass address of local buffer to get response
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    esp_http_client_set_header(client, "Authorization", "Bearer " CONFIG_HA_KEY);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+
+    // GET
+    int err = esp_http_client_perform(client);
+    int status;
+    if (err == ESP_OK) {
+        ESP_LOGD(TAG, "HTTP GET Status = %d, content_length = %d",
+                 esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client));
+        status = esp_http_client_get_status_code(client);
+        memcpy(out, local_response_buffer, MAX_HTTP_OUTPUT_BUFFER);
+    } else {
+        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+    }
+    esp_http_client_close(client);
+    esp_http_client_cleanup(client);
+    if(err == ESP_OK){
+        return status;
+    }
+    return err;
+}
 
 ha_entity::ha_entity(const char *entity_id, const char *dname) {
     printf("Creating entity: %s\n", id);
@@ -177,7 +261,20 @@ ha_entity *new_entity(const char *entity_id, const char *dname) {
 
     if (entity_by_name.count(entity) > 0) {
         EntityFactory *factory = entity_by_name[entity];
-        return factory->create(entity_id, dname);
+        ha_entity *e = factory->create(entity_id, dname);
+
+        char *buf = (char *)calloc(sizeof(char), MAX_HTTP_OUTPUT_BUFFER);
+        get_state(entity_id, buf);
+        DynamicJsonDocument doc(3000);
+        DeserializationError error = deserializeJson(doc, buf);
+        if (error) {
+            ESP_LOGE(TAG, "deserializeJson() failed: %s\n", error.c_str());
+        } else {
+            JsonObjectConst state = doc.as<JsonObject>();
+            e->update(state);
+        }
+        free(buf);
+        return e;
     }
     return nullptr;
 }
